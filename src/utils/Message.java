@@ -1,15 +1,17 @@
 package utils;
 
+import java.util.Arrays;
+
 public class Message {
 
     private String _message;
 
-    public Message(byte[] message) {
-
+    public Message(byte[] messageBuffer, int messageLength) {
+    	_message = new String(Arrays.copyOfRange(messageBuffer, 0, messageLength));
     }
 
     public Message(String message) {
-
+    	_message = message;
     }
 
     /**
@@ -18,7 +20,6 @@ public class Message {
      * @return byte array
      */
     public byte[] toByteArray() {
-
-        return null;
+        return _message.getBytes();
     }
 }
