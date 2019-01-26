@@ -22,45 +22,45 @@ public abstract class Socket {
 
     protected static final int BUFFER_LENGTH = 100;
 
-    protected InetAddress 	_targetAddress;
+    protected InetAddress       _targetAddress;
 
-    protected DatagramSocket  _sendSocket;
-    protected DatagramSocket  _recvSocket;
-    protected DatagramPacket  _sendPacket;
-    protected DatagramPacket  _recvPacket;
+    protected DatagramSocket    _sendSocket;
+    protected DatagramSocket    _recvSocket;
+    protected DatagramPacket    _sendPacket;
+    protected DatagramPacket    _recvPacket;
 
-    protected Queue<byte[]>	_sendQueue;
-    protected Queue<byte[]>	_recvQueue;
+    protected Queue<byte[]>     _sendQueue;
+    protected Queue<byte[]>     _recvQueue;
 
-    protected boolean 		_running;
-    protected boolean       _connected;
-    
+    protected boolean           _running;
+    protected boolean           _connected;
+
     /* ============================= */
     /* ========== GETTERS ========== */
 
     /** Get the port to send on */
-    public int 		   	sendPort() 			{ return _sendSocket.getPort(); }
+    public int          sendPort()          { return _sendSocket.getPort(); }
     /** Get the address for the sending socket */
-    public InetAddress  sendAddress() 		{ return _sendSocket.getInetAddress(); }
+    public InetAddress  sendAddress()       { return _sendSocket.getInetAddress(); }
     /** Get the port the socket is listening on */
-    public int 		   	recvPort() 			{ return _recvSocket.getPort(); }
+    public int          recvPort()          { return _recvSocket.getPort(); }
     /** Get the address for the listening socket */
-    public InetAddress  recvAddress() 		{ return _recvSocket.getInetAddress(); }
-    
+    public InetAddress  recvAddress()       { return _recvSocket.getInetAddress(); }
+
     /* ============================= */
     /* ========== SETTERS ========== */
 
     /** Sets address and port for packet destination */
-    public void 		setSendDestination(String address, int port) throws UnknownHostException {
+    public void setSendDestination(String address, int port) throws UnknownHostException {
         InetAddress targetAddress = InetAddress.getByName(address);
         setSendDestination(targetAddress, port);
     }
     /** Sets address and port for packet destination */
-    public void 		setSendDestination(InetAddress address, int port) throws UnknownHostException {
+    public void setSendDestination(InetAddress address, int port) throws UnknownHostException {
         _sendPacket.setAddress(address);
         _sendPacket.setPort(port);
     }
-    
+
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
@@ -80,16 +80,16 @@ public abstract class Socket {
     /** Constructs a new Socket without a specific port to recieve on (usually for client sockets) */
     public Socket() throws SocketException {
         _sendSocket = new DatagramSocket();
-        _recvSocket	= new DatagramSocket();
+        _recvSocket = new DatagramSocket();
 
         _recvPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
         _sendPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
 
-        _sendQueue	= new LinkedList<byte[]>();
-        _recvQueue	= new LinkedList<byte[]>();
+        _sendQueue  = new LinkedList<byte[]>();
+        _recvQueue  = new LinkedList<byte[]>();
         _connected  = false;
     }
-    
+
     /* ============================= */
     /* ========== METHODS ========== */
 
@@ -194,7 +194,7 @@ public abstract class Socket {
                 }
             }
         }).start();
-        
+
         return true;
     }
 
