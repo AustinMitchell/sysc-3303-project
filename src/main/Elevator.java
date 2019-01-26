@@ -2,30 +2,39 @@ package main;
 
 import java.io.*;
 import java.net.*;
+import utils.*;
 
 public class Elevator {
 
-    /* ========== PRIVATE VARIABLES ========== */
-    private InetAddress schedulerIP;
+    /* ===================================== */
+    /* ========== PRIVATE MEMBERS ========== */
 
-    private DatagramPacket schedulerReceivePacket;
+    private InetAddress     _schedulerIP;
 
-    private DatagramSocket schedulerReceiveSocket;
+    private DatagramPacket  _schedulerReceivePacket;
+    private DatagramPacket  _schedulerSendPacket;
 
-    /* ========== PUBLIC VARIABLES ========== */
+    private DatagramSocket  _schedulerReceiveSocket;
+    private DatagramSocket  _schedulerSendSocket;
 
-    /* ========== PRIVATE METHODS ========== */
+    /* ======================================= */
+    /* ========== PROTECTED MEMBERS ========== */
 
-    private void initializeSchedulerScoket() {
-        try {
-            schedulerReceiveSocket = new DatagramSocket();
-        } catch (SocketException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
 
-    /* ========== PUBLIC METHODS ========== */
+    /* ==================================== */
+    /* ========== PUBLIC MEMBERS ========== */
+
+
+    /* ============================= */
+    /* ========== SETTERS ========== */
+
+
+    /* ============================= */
+    /* ========== GETTERS ========== */
+
+
+    /* ================================== */
+    /* ========== CONSTRUCTORS ========== */
 
     /**
      * Constructor that uses localhost as the Scheduler IP
@@ -34,7 +43,7 @@ public class Elevator {
     public Elevator() {
         // Initialize the scheduler IP address to the local host
         try {
-            schedulerIP = InetAddress.getLocalHost();
+            _schedulerIP = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
@@ -52,7 +61,7 @@ public class Elevator {
     public Elevator(String IPAddress) {
         // Initialize the scheduler IP to the passed IP address
         try {
-            schedulerIP = InetAddress.getByName(IPAddress);
+            _schedulerIP = InetAddress.getByName(IPAddress);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
@@ -62,13 +71,92 @@ public class Elevator {
         this.initializeSchedulerScoket();
     }
 
+    /* ============================= */
+    /* ========== METHODS ========== */
+
+    /**
+     * Method to set up the scheduler socket
+     */
+    private void initializeSchedulerScoket() {
+        try {
+            _schedulerReceiveSocket = new DatagramSocket(Scheduler.PORT_ELEVATOR);
+        } catch (SocketException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Helper function to log the data of a packet
+     *
+     * @param packet
+     */
+    private void logPacket(DatagramPacket packet) {
+        System.out.println("===== Elevator: Packet Data =====");
+        System.out.println("To host:          " + packet.getAddress());
+        System.out.println("Destination port: " + packet.getPort());
+        System.out.println("Length:           " + packet.getLength());
+        System.out.println("Contains:         " + new String(packet.getData(), 0, packet.getLength()));
+        System.out.print("Byte array:       ");
+        for (int j = 0; j < packet.getLength(); j++) {
+            System.out.print(packet.getData()[j] + " ");
+        }
+
+        System.out.println("");
+    }
+
     /**
      * The main running loop for Elevator
      *
      */
     public void loop() {
         System.out.println("Elevator System Started...");
-        System.out.println("Waiting for event from Scheduler at address: " + schedulerIP.getHostName());
+
+        // Start the main loop
+        while (true) {
+            byte scheduleReceiveData[] = new byte[512];
+
+            _schedulerReceivePacket = new DatagramPacket(scheduleReceiveData,
+                                                         scheduleReceiveData.length);
+
+            // Elevator waits for a request from the Scheduler
+            try {
+                _schedulerReceiveSocket.receive(_schedulerReceivePacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            logPacket(_schedulerReceivePacket);
+
+            // This is where the message will be parsed and an action will be determined
+            // what to do, then a response will be sent to the Scheduler
+
+            // Construct a response to send to the Scheduler
+            _schedulerSendPacket = new DatagramPacket(_schedulerReceivePacket.getData(),
+                                                      _schedulerReceivePacket.getLength());
+
+            // Open a socket to send back to Scheduler
+            try {
+                _schedulerSendSocket = new DatagramSocket(_schedulerReceivePacket.getSocketAddress());
+            } catch (SocketException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            // Send the packet to the Scheduler
+            try {
+                _schedulerSendSocket.send(_schedulerSendPacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            // Close the socket
+            _schedulerSendSocket.close();
+        }
+
+
     }
 
     /**
@@ -80,6 +168,7 @@ public class Elevator {
 
         Elevator elevator;
 
+        // Construct a new Elevator
         if (args.length == 0) {
             elevator = new Elevator();
         }
