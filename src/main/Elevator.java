@@ -10,8 +10,12 @@ public class Elevator {
     /* ========== PRIVATE MEMBERS ========== */
 
     private InetAddress     _schedulerIP;
+
     private DatagramPacket  _schedulerReceivePacket;
+    private DatagramPacket  _schedulerSendPacket;
+
     private DatagramSocket  _schedulerReceiveSocket;
+    private DatagramSocket  _schedulerSendSocket;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -125,10 +129,31 @@ public class Elevator {
 
             logPacket(_schedulerReceivePacket);
 
-            /* ====================================== */
-            /* this will be where the message is read */
+            // This is where the message will be parsed and an action will be determined
+            // what to do, then a response will be sent to the Scheduler
 
+            // Construct a response to send to the Scheduler
+            _schedulerSendPacket = new DatagramPacket(_schedulerReceivePacket.getData(),
+                                                      _schedulerReceivePacket.getLength());
 
+            // Open a socket to send back to Scheduler
+            try {
+                _schedulerSendSocket = new DatagramSocket(_schedulerReceivePacket.getSocketAddress());
+            } catch (SocketException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            // Send the packet to the Scheduler
+            try {
+                _schedulerSendSocket.send(_schedulerSendPacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            // Close the socket
+            _schedulerSendSocket.close();
         }
 
 
