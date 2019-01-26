@@ -1,6 +1,6 @@
 package utils;
 
 public enum Direction {
-	UP,
-	DOWN
+    UP,
+    DOWN
 }
