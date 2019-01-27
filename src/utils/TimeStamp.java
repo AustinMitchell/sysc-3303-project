@@ -3,13 +3,13 @@ package utils;
 import java.util.regex.*;
 
 public class TimeStamp {
-    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("(\\d\\d):(\\d\\d):(\\d\\d).(\\d\\d\\d)");
-    
+    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{1,3})$");
+
     private int _hour;
     private int _minute;
     private int _second;
     private int _millisecond;
-    
+
     /** Return the hour of timestamp */
     public int hour()        { return _hour; }
     /** Return the minute of timestamp */
@@ -18,7 +18,7 @@ public class TimeStamp {
     public int second()      { return _second; }
     /** Return the millisecond of timestamp */
     public int millisecond() { return _millisecond; }
-    
+
     /**
      * Construct a TimeStamp object with values for each piece
      * @param hour
@@ -32,9 +32,9 @@ public class TimeStamp {
         _second      = second;
         _millisecond = millisecond;
     }
-    
+
     /**
-     * Construct a timestamp object from a string with the following regex format: (\d\d):(\d\d):(\d\d).(\d\d\d)
+     * Construct a timestamp object from a string with the following regex format: ^(\d{2}):(\d{2}):(\d{2})\.(\d{1,3})$
      * group(1): hours
      * group(2): minutes
      * group(3): seconds
@@ -43,13 +43,14 @@ public class TimeStamp {
      */
     public TimeStamp(String timeStamp) {
         Matcher match = TIMESTAMP_PATTERN.matcher(timeStamp);
+        match.matches();
 
         _hour        = Integer.parseInt(match.group(1));
         _minute      = Integer.parseInt(match.group(2));
         _second      = Integer.parseInt(match.group(3));
         _millisecond = Integer.parseInt(match.group(4));
     }
-    
+
     @Override
     public String toString() {
         return String.format("%02d:%02d:%02d.%03d", _hour, _minute, _second, _millisecond);
