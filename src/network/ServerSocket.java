@@ -3,7 +3,6 @@ package network;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 
 public class ServerSocket extends Socket {
 
@@ -41,6 +40,6 @@ public class ServerSocket extends Socket {
             e.printStackTrace();
             return false;
         }
-        return false;
+        return true;
     }
 }

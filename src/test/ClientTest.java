@@ -6,7 +6,7 @@ import network.*;
 
 public class ClientTest {
     public static void main(String[] args) throws Exception {
-        ClientSocket socket = new ClientSocket("localhost", 5000);
+        ClientSocket socket = new ClientSocket("localhost", 3000);
 
         System.out.println("Establishing connection...");
         socket.runSetupAndStartThreads();
@@ -17,6 +17,7 @@ public class ClientTest {
             scanner.hasNextLine();
             String message = scanner.nextLine();
             socket.sendMessage(message.getBytes());
+            while(!socket.isSendQueueEmpty());
             
             if (message.equals("exit")) {
                 break;
