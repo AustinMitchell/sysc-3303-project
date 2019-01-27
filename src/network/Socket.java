@@ -33,7 +33,6 @@ public abstract class Socket {
     protected Queue<byte[]>     _recvQueue;
 
     protected boolean           _running;
-    protected boolean           _connected;
 
     /* ============================= */
     /* ========== GETTERS ========== */
@@ -46,6 +45,9 @@ public abstract class Socket {
     public int          recvPort()          { return _recvSocket.getPort(); }
     /** Get the address for the listening socket */
     public InetAddress  recvAddress()       { return _recvSocket.getInetAddress(); }
+    
+    /** Return the connection status of the socket */
+    public boolean      isConnected()       { return _running; }
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -56,7 +58,7 @@ public abstract class Socket {
         setSendDestination(targetAddress, port);
     }
     /** Sets address and port for packet destination */
-    public void setSendDestination(InetAddress address, int port) throws UnknownHostException {
+    public void setSendDestination(InetAddress address, int port) {
         _sendPacket.setAddress(address);
         _sendPacket.setPort(port);
     }
@@ -72,9 +74,8 @@ public abstract class Socket {
         _recvPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
         _sendPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
 
-        _sendQueue	= new LinkedList<byte[]>();
-        _recvQueue	= new LinkedList<byte[]>();
-        _connected  = false;
+        _sendQueue	= new LinkedList<>();
+        _recvQueue	= new LinkedList<>();
     }
 
     /** Constructs a new Socket without a specific port to recieve on (usually for client sockets) */
@@ -85,9 +86,8 @@ public abstract class Socket {
         _recvPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
         _sendPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
 
-        _sendQueue  = new LinkedList<byte[]>();
-        _recvQueue  = new LinkedList<byte[]>();
-        _connected  = false;
+        _sendQueue  = new LinkedList<>();
+        _recvQueue  = new LinkedList<>();
     }
 
     /* ============================= */
@@ -131,13 +131,11 @@ public abstract class Socket {
 
     /** Instantiates connection using setup() and sets up threads for input and output message queues */
     public boolean runSetupAndStartThreads() {
-        _connected = setup();
-        if (!_connected) {
+        _running = setup();
+        if (!_running) {
             close();
             return false;
         }
-
-        _running = true;
 
         // Input thread
         new Thread(new Runnable(){

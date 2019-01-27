@@ -4,7 +4,7 @@ import network.*;
 
 public class ServerTest {
     public static void main(String[] args) throws Exception {
-        ServerSocket socket = new ServerSocket(5000);
+        ServerSocket socket = new ServerSocket(3000);
 
         System.out.println("Waiting for client...");
         socket.runSetupAndStartThreads();
