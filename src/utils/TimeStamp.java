@@ -1,8 +1,12 @@
 package utils;
 
+import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.regex.*;
 
-public class TimeStamp {
+public class TimeStamp implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{1,3})$");
 
     private int _hour;
@@ -50,9 +54,26 @@ public class TimeStamp {
         _second      = Integer.parseInt(match.group(3));
         _millisecond = Integer.parseInt(match.group(4));
     }
+    
+    /**
+     * Construct a timestamp object from a byte array. Only the first 5 bytes will be considered: 1 byte for hours, minutes and seconds, 2 bytes for milliseconds
+     * @param bytes
+     */
+    public TimeStamp(byte[] bytes) {
+        ByteBuffer bytesWrapper = ByteBuffer.wrap(bytes);
+        _hour        = bytesWrapper.get();
+        _minute      = bytesWrapper.get();
+        _second      = bytesWrapper.get();
+        _millisecond = bytesWrapper.getShort();
+    }
 
     @Override
     public String toString() {
         return String.format("%02d:%02d:%02d.%03d", _hour, _minute, _second, _millisecond);
+    }
+    
+    /** Converts TimeStamp to an array of bytes. First three bytes are the hour, minutes and second, last two bytes are milliseconds */
+    public byte[] toBytes() {
+        return ByteBuffer.allocate(5).put((byte)_hour).put((byte)_minute).put((byte)_second).putShort((short)_millisecond).array();
     }
 }

@@ -1,6 +1,11 @@
 package utils;
 
-public class FloorInputEntry {
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+
+public class FloorInputEntry implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private TimeStamp 	_timestamp;
     private int 		_floor;
     private Direction 	_direction;
@@ -41,8 +46,21 @@ public class FloorInputEntry {
         _car = Integer.parseInt(splitLine[3]);
     }
     
+    /** Creates a new FloorInputEntry from a byte array. Only considers the first 9 bytes */
+    public FloorInputEntry(byte[] inputData) {
+        _timestamp  = new TimeStamp(inputData);
+        _floor      = inputData[5];
+        _direction  = Direction.fromInt(inputData[6]);
+        _car        = inputData[7];
+    }
+    
     @Override
     public String toString() {
         return String.format("Timestamp: %s, Floor: %d, Direction: %s, Car: %d", _timestamp.toString(), _floor, _direction, _car);
+    }
+    
+    /** Returns the entry as an array of bytes. First 5 bytes are the timestamp, then the next 3 are the floor, direction and car */
+    public byte[] toBytes() {
+        return ByteBuffer.allocate(8).put(_timestamp.toBytes()).put((byte)_floor).put((byte)_direction.ordinal()).put((byte)_car).array();
     }
 }
