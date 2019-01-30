@@ -2,6 +2,11 @@ package main;
 
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
+
+import javax.print.attribute.standard.RequestingUserName;
+
+import network.ClientSocket;
 import utils.*;
 
 public class Elevator {
@@ -9,13 +14,9 @@ public class Elevator {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
+    private ClientSocket    _schedulerSocket;
+    
     private InetAddress     _schedulerIP;
-
-    private DatagramPacket  _schedulerReceivePacket;
-    private DatagramPacket  _schedulerSendPacket;
-
-    private DatagramSocket  _schedulerReceiveSocket;
-    private DatagramSocket  _schedulerSendSocket;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -79,7 +80,7 @@ public class Elevator {
      */
     private void initializeSchedulerScoket() {
         try {
-            _schedulerReceiveSocket = new DatagramSocket(Scheduler.PORT_ELEVATOR);
+            _schedulerSocket = new ClientSocket(_schedulerIP, Scheduler.PORT_ELEVATOR);
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
@@ -107,64 +108,38 @@ public class Elevator {
 
     /**
      * The main running loop for Elevator
+     * @throws IOException 
      *
      */
-    public void loop() {
+    public void loop() throws IOException {
         System.out.println("Elevator System Started...");
 
+        if (!_schedulerSocket.runSetupAndStartThreads()) {
+            throw new RuntimeException("Something went wrong setting up socket; Aborting");
+        }
+        
         // Start the main loop
         while (true) {
-            byte scheduleReceiveData[] = new byte[512];
+            // Wait for message from floor socket and send it off to the elevator
+            _schedulerSocket.waitForMessage();
+            byte[] message = _schedulerSocket.getMessage();
+            System.out.println(String.format("Entry as bytes: %s", Arrays.toString(message)));
+            
+            FloorInputEntry returnMessage = new FloorInputEntry(message);
+            System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
+                        
+            _schedulerSocket.sendMessage(message);
 
-            _schedulerReceivePacket = new DatagramPacket(scheduleReceiveData,
-                                                         scheduleReceiveData.length);
-
-            // Elevator waits for a request from the Scheduler
-            try {
-                _schedulerReceiveSocket.receive(_schedulerReceivePacket);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-
-            logPacket(_schedulerReceivePacket);
-
-            // This is where the message will be parsed and an action will be determined
-            // what to do, then a response will be sent to the Scheduler
-
-            // Construct a response to send to the Scheduler
-            _schedulerSendPacket = new DatagramPacket(_schedulerReceivePacket.getData(),
-                                                      _schedulerReceivePacket.getLength());
-
-            // Open a socket to send back to Scheduler
-            try {
-                _schedulerSendSocket = new DatagramSocket(_schedulerReceivePacket.getSocketAddress());
-            } catch (SocketException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-
-            // Send the packet to the Scheduler
-            try {
-                _schedulerSendSocket.send(_schedulerSendPacket);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-
-            // Close the socket
-            _schedulerSendSocket.close();
         }
-
-
     }
 
     /**
      * Starts the main loop
      *
      * @param args
+     * @throws IOException 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         Elevator elevator;
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 import network.ClientSocket;
 import utils.FloorInputEntry;
@@ -13,25 +14,37 @@ import utils.ResLoader;
 public class Floor {
     public static final String INPUT_FILE_PATH = "floor_input.in";
     
-    private ClientSocket _socket;
+    private ClientSocket _schedulerSocket;
     
     public Floor() throws UnknownHostException, SocketException{
-        _socket = new ClientSocket("localhost", Scheduler.PORT_FLOOR);
+        _schedulerSocket = new ClientSocket("localhost", Scheduler.PORT_FLOOR);
     }
     
-    public void run() {
-        try {
-            BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
-            for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
-                System.out.println(new FloorInputEntry(line));
-            }
-        } catch (IOException e) {
-            System.err.println("Cannot read input file. ");
-            e.printStackTrace();
-            return;
+    public void run() throws IOException {
+        if (!_schedulerSocket.runSetupAndStartThreads()) {
+            throw new RuntimeException("Something went wrong setting up socket; Aborting");
+        }
+        
+        BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
+        for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
+            FloorInputEntry newEntry = new FloorInputEntry(line);
+            
+            System.out.println(String.format("Sending out new entry to Scheduler: %s", newEntry));            
+            
+            byte[] bytes = newEntry.toBytes();
+            System.out.println(String.format("Entry as bytes: %s", Arrays.toString(bytes)));
+            
+            _schedulerSocket.sendMessage(bytes);
+            _schedulerSocket.waitForMessage();
+            
+            FloorInputEntry returnMessage = new FloorInputEntry(_schedulerSocket.getMessage());
+            System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
+            
         }
 
     }
     
-    public static void main(String[] args) throws UnknownHostException, SocketException { new Floor().run(); }
+    public static void main(String[] args) throws IOException {
+        new Floor().run();
+    }
 }
