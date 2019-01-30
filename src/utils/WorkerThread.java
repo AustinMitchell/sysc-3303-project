@@ -54,6 +54,6 @@ public class WorkerThread<R, I> {
                 _jobIsFinished = false;
                 _result = _job.execute(_inputData);
                 _jobIsFinished = true;
-            }});
+            }}).start();
     }
 }
