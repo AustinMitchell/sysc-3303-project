@@ -8,7 +8,10 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+
+import utils.WorkerThread;
 
 /**
  * Wrapper around DatagramSocket objects and provides sending and receiving methods in 
@@ -205,5 +208,15 @@ public abstract class Socket {
         if (!_recvSocket.isClosed()) {
             _recvSocket.close();
         }
+    }
+    
+    /** Creates a WorkerThread object which is given a Job that executes the runSetupAndStartThreads() function. */
+    public WorkerThread<Boolean, Void> generateSetupWorkerThread() {
+        return new WorkerThread<>(new WorkerThread.Job<Boolean, Void>() {
+                @Override
+                public Boolean execute(List<Void> inputData) {
+                    return runSetupAndStartThreads();
+                }
+            });
     }
 }

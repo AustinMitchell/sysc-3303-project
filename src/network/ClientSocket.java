@@ -1,6 +1,7 @@
 package network;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -23,6 +24,12 @@ public class ClientSocket extends Socket {
     
     /** Constructs an socket with the destination address and port set */
     public ClientSocket(String sendAddress, int sendPort) throws SocketException, UnknownHostException {
+        super();
+        setSendDestination(sendAddress, sendPort);
+    }
+    
+    /** Constructs an socket with the destination address and port set */
+    public ClientSocket(InetAddress sendAddress, int sendPort) throws SocketException {
         super();
         setSendDestination(sendAddress, sendPort);
     }
