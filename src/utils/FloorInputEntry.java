@@ -1,10 +1,8 @@
 package utils;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 
-public class FloorInputEntry implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class FloorInputEntry {
     
     private TimeStamp 	_timestamp;
     private int 		_floor;

@@ -4,8 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 
-import javax.print.attribute.standard.RequestingUserName;
-
 import network.ClientSocket;
 import utils.*;
 
@@ -51,7 +49,7 @@ public class Elevator {
         }
 
         // Initialize the scheduler socket
-        this.initializeSchedulerScoket();
+        this.initializeSchedulerSocket();
     }
 
     /**
@@ -69,7 +67,7 @@ public class Elevator {
         }
 
         // Initialize the Scheduler socket
-        this.initializeSchedulerScoket();
+        this.initializeSchedulerSocket();
     }
 
     /* ============================= */
@@ -78,7 +76,7 @@ public class Elevator {
     /**
      * Method to set up the scheduler socket
      */
-    private void initializeSchedulerScoket() {
+    private void initializeSchedulerSocket() {
         try {
             _schedulerSocket = new ClientSocket(_schedulerIP, Scheduler.PORT_ELEVATOR);
         } catch (SocketException e) {
