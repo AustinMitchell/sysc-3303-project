@@ -1,4 +1,4 @@
-package utils;
+package utils.message;
 
 public enum Direction {
     UP,

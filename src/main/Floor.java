@@ -7,9 +7,9 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
-import network.ClientSocket;
-import utils.FloorInputEntry;
+import network.socket.ClientSocket;
 import utils.ResLoader;
+import utils.message.FloorInputEntry;
 
 public class Floor {
     public static final String INPUT_FILE_PATH = "floor_input.in";

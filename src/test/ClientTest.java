@@ -3,6 +3,7 @@ package test;
 import java.util.Scanner;
 
 import network.*;
+import network.socket.ClientSocket;
 
 public class ClientTest {
     public static void main(String[] args) throws Exception {

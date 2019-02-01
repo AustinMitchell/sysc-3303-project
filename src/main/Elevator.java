@@ -4,8 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 
-import network.ClientSocket;
+import network.socket.ClientSocket;
 import utils.*;
+import utils.message.FloorInputEntry;
 
 public class Elevator {
 
