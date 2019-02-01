@@ -1,5 +1,7 @@
 package main;
 
+import utils.message.MessageType;
+
 public class ElevatorMotor {
     /* =========================== */
     /* ========== ENUMS ========== */
@@ -7,7 +9,20 @@ public class ElevatorMotor {
     public enum MotorMovement {
         UP,
         DOWN,
-        STATIONARY
+        STATIONARY;
+        
+        public static MotorMovement fromOrdinal(int i) {
+            switch(i) {
+            case 0:
+                return UP;
+            case 1:
+                return DOWN;
+            case 2:
+                return STATIONARY;
+            default:
+                return null;
+            }
+        }
     }
 
     /* ===================================== */

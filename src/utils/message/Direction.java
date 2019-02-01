@@ -12,11 +12,11 @@ public enum Direction {
         case 1:
             return "DOWN";
         default:
-            return "invalid";
+            return "<invalid>";
         }
     }
     
-    public static Direction fromInt(int i) {
+    public static Direction fromOrdinal(int i) {
         switch(i) {
         case 0:
             return UP;
