@@ -72,13 +72,13 @@ public abstract class Socket {
     /** Constructs a new Socket with a specific port to recieve on (usually for server sockets) */
     public Socket(int recievePort) throws SocketException {
         _sendSocket = new DatagramSocket();
-        _recvSocket	= new DatagramSocket(recievePort);
+        _recvSocket = new DatagramSocket(recievePort);
 
         _recvPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
         _sendPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
 
-        _sendQueue	= new LinkedList<>();
-        _recvQueue	= new LinkedList<>();
+        _sendQueue  = new LinkedList<>();
+        _recvQueue  = new LinkedList<>();
     }
 
     /** Constructs a new Socket without a specific port to recieve on (usually for client sockets) */
