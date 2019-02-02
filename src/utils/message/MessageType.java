@@ -7,7 +7,8 @@ public enum MessageType {
     ELEVATOR_ACTION_RESPONSE,
     ELEVATOR_ACTION_REQUEST,
     ELEVATOR_CONTINUE_RESPONSE,
-    ELEVATOR_CONTINUE_REQUEST;
+    ELEVATOR_CONTINUE_REQUEST,
+    SCHEDULER_DESTINATION_REQUEST;
     
     public static MessageType fromOrdinal(int i) {
         switch(i) {
@@ -21,6 +22,8 @@ public enum MessageType {
             return ELEVATOR_CONTINUE_RESPONSE;
         case 4:
             return ELEVATOR_CONTINUE_REQUEST;
+        case 5:
+            return SCHEDULER_DESTINATION_REQUEST;
         default:
             return null;
         }
@@ -39,7 +42,8 @@ public enum MessageType {
             return "ELEVATOR_CONTINUE_RESPONSE";
         case 4:
             return "ELEVATOR_CONTINUE_REQUEST";
-
+        case 5:
+            return "SCHEDULER_DESTINATION_REQUEST";
         default:
             return "<invalid>";
         }
