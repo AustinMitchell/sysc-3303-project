@@ -1,6 +1,7 @@
 package utils.message;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class FloorInputEntry implements Comparable<FloorInputEntry> {
     public static final MessageType MESSAGE_TYPE = MessageType.FLOOR_INPUT_ENTRY;
@@ -48,10 +49,10 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
     /** Creates a new FloorInputEntry from a byte array. Only considers the first 9 bytes */
     public FloorInputEntry(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        _timestamp  = new TimeStamp(inputData);
-        _floor      = inputData[5];
-        _direction  = Direction.fromOrdinal(inputData[6]);
-        _car        = inputData[7];
+        _timestamp  = new TimeStamp(Arrays.copyOfRange(inputData, 1, 6));
+        _floor      = inputData[6];
+        _direction  = Direction.fromOrdinal(inputData[7]);
+        _car        = inputData[8];
     }
 
     @Override

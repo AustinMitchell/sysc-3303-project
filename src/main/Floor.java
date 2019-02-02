@@ -16,24 +16,64 @@ import utils.ResLoader;
 import utils.message.FloorInputEntry;
 
 public class Floor {
-    public static final String INPUT_FILE_PATH = "floor_input.in";
+
+
+    /* ===================================== */
+    /* ========== PRIVATE MEMBERS ========== */
 
     private ClientSocket _schedulerSocket;
 
+    /* ======================================= */
+    /* ========== PROTECTED MEMBERS ========== */
+
+
+    /* ==================================== */
+    /* ========== PUBLIC MEMBERS ========== */
+
+    public static final String  INPUT_FILE_PATH     = "floor_input.in";
+    public static final byte[]  NUMBER_OF_FLOORS    = { 10 };
+
+    /* ============================= */
+    /* ========== SETTERS ========== */
+
+    /* ============================= */
+    /* ========== GETTERS ========== */
+
+    /* ================================== */
+    /* ========== CONSTRUCTORS ========== */
+
+    /**
+     * Main constructor for the Floor class. Takes care of setting up the socket
+     * connection with the scheduler
+     *
+     * @throws UnknownHostException
+     * @throws SocketException
+     */
     public Floor() throws UnknownHostException, SocketException{
         _schedulerSocket = new ClientSocket("localhost", Scheduler.PORT_FLOOR);
     }
 
+    /* ============================= */
+    /* ========== METHODS ========== */
+
+    /**
+     * The main execution loop for the Floor class
+     *
+     * @throws IOException
+     */
     public void run() throws IOException {
         // Establish a connection with the Scheduler
         if (!_schedulerSocket.runSetupAndStartThreads()) {
             throw new RuntimeException("Something went wrong setting up socket; Aborting");
         }
 
-        List<FloorInputEntry> entryList = new ArrayList<FloorInputEntry>();
+        // Send the number of floors there are to the Scheduler
+        _schedulerSocket.sendMessage(NUMBER_OF_FLOORS);
 
         // Read the input file and establish a stack of entries
+        List<FloorInputEntry> entryList = new ArrayList<FloorInputEntry>();
         BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
+
         for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
             FloorInputEntry newEntry = new FloorInputEntry(line);
             entryList.add(newEntry);
@@ -81,6 +121,11 @@ public class Floor {
         System.out.println("");
     }
 
+    /**
+     * Sends a FloorInputEntry to the scheduler
+     *
+     * @param entry
+     */
     private void sendEntryToScheduler(FloorInputEntry entry) {
         System.out.println(String.format("Sending out new entry to Scheduler: %s", entry));
 
@@ -94,6 +139,12 @@ public class Floor {
         //System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
     }
 
+    /**
+     * Launches the main loop for the Floor object
+     *
+     * @param args
+     * @throws IOException
+     */
     public static void main(String[] args) throws IOException {
         new Floor().run();
     }
