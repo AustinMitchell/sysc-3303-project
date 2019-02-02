@@ -4,7 +4,7 @@ public class ElevatorDoor {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private boolean _isOpen = false;
+    private boolean _isOpen;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -18,19 +18,6 @@ public class ElevatorDoor {
     /* ============================= */
     /* ========== SETTERS ========== */
 
-    /**
-     * sets the state of the door to 'open'
-     */
-    public void openDoor() {
-        this._isOpen = true;
-    }
-
-    /**
-     * sets the state of the door to 'closed'
-     */
-    public void closeDoor() {
-        this._isOpen = false;
-    }
 
     /* ============================= */
     /* ========== GETTERS ========== */
@@ -47,13 +34,21 @@ public class ElevatorDoor {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * ElevatorDoor Constructor
-     */
+    /** ElevatorDoor Constructor. Sets initial status of door to closed. */
     public ElevatorDoor() {
-        // empty stub
+        _isOpen = false;
     }
 
     /* ============================= */
     /* ========== METHODS ========== */
+    
+    /** sets the state of the door to 'open' */
+    public void openDoor() {
+        this._isOpen = true;
+    }
+
+    /** sets the state of the door to 'closed' */
+    public void closeDoor() {
+        this._isOpen = false;
+    }
 }

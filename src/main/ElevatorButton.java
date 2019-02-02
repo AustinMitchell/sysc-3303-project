@@ -4,46 +4,35 @@ public class ElevatorButton {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private int _floorNumber = 0;
+    private ElevatorLamp    _targetLamp;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
 
-
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-
-
     /* ============================= */
     /* ========== SETTERS ========== */
-
-
-
+    
     /* ============================= */
     /* ========== GETTERS ========== */
-
-    /**
-     * Retrieves the floor number of the button
-     *
-     * @return floor number
-     */
-    public int floorNumber() {
-        return this._floorNumber;
-    }
-
+    
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * Elevator button constructor
-     *
-     * @param floorNumber
+    /** 
+     * Elevator button constructor. When pressed, it turns {targetLamp} on.
+     * @param targetLamp    Target lamp to turn on when pressed 
      */
-    public ElevatorButton(int floorNumber) {
-        this._floorNumber = floorNumber;
+    public ElevatorButton(ElevatorLamp targetLamp) {
+        _targetLamp = targetLamp;
     }
 
     /* ============================= */
     /* ========== METHODS ========== */
+    
+    public void pressButton() {
+        _targetLamp.turnON();
+    }
 }
