@@ -8,7 +8,7 @@ import network.socket.ClientSocket;
 import utils.*;
 import utils.message.FloorInputEntry;
 
-public class Elevator {
+public class ElevatorManager {
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
@@ -40,7 +40,7 @@ public class Elevator {
      * Constructor that uses localhost as the Scheduler IP
      *
      */
-    public Elevator() {
+    public ElevatorManager() {
         // Initialize the scheduler IP address to the local host
         try {
             _schedulerIP = InetAddress.getLocalHost();
@@ -58,7 +58,7 @@ public class Elevator {
      *
      * @param IPAddress
      */
-    public Elevator(String IPAddress) {
+    public ElevatorManager(String IPAddress) {
         // Initialize the scheduler IP to the passed IP address
         try {
             _schedulerIP = InetAddress.getByName(IPAddress);
@@ -140,14 +140,14 @@ public class Elevator {
      */
     public static void main(String[] args) throws IOException {
 
-        Elevator elevator;
+        ElevatorManager elevator;
 
         // Construct a new Elevator
         if (args.length == 0) {
-            elevator = new Elevator();
+            elevator = new ElevatorManager();
         }
         else {
-            elevator = new Elevator(args[0]);
+            elevator = new ElevatorManager(args[0]);
         }
 
         elevator.loop();
