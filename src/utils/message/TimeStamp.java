@@ -52,7 +52,7 @@ public class TimeStamp implements Comparable<TimeStamp> {
         _second      = (byte)Integer.parseInt(match.group(3));
         _millisecond = (short)Integer.parseInt(match.group(4));
     }
-    
+
     /**
      * Construct a timestamp object from a byte array. Only the first 5 bytes will be considered: 1 byte for hours, minutes and seconds, 2 bytes for milliseconds
      * @param bytes
@@ -65,16 +65,28 @@ public class TimeStamp implements Comparable<TimeStamp> {
         _millisecond = bytesWrapper.getShort();
     }
 
+    /**
+     * Calculates the timestamp in milliseconds
+     *
+     * @return time in milliseconds
+     */
+    public int toMilliseconds() {
+        return (this._hour * 60 * 60 * 1000) +
+               (this._minute * 60 * 1000) +
+               (this._second * 1000) +
+               this._millisecond;
+    }
+
     @Override
     public String toString() {
         return String.format("%02d:%02d:%02d.%03d", _hour, _minute, _second, _millisecond);
     }
-    
+
     /** Converts TimeStamp to an array of bytes. First three bytes are the hour, minutes and second, last two bytes are milliseconds */
     public byte[] toBytes() {
         return ByteBuffer.allocate(5).put(_hour).put(_minute).put(_second).putShort(_millisecond).array();
     }
-    
+
     /** Compares this timestamp to another timestamp. Earlier timestamps are considered "less than" later timestamps */
     @Override
     public int compareTo(TimeStamp other) {
