@@ -8,8 +8,9 @@ public enum MessageType {
     ELEVATOR_ACTION_REQUEST,
     ELEVATOR_CONTINUE_RESPONSE,
     ELEVATOR_CONTINUE_REQUEST,
-    SCHEDULER_DESTINATION_REQUEST;
-    
+    SCHEDULER_DESTINATION_REQUEST,
+    ELEVATOR_BUTTON_PUSH_EVENT;
+
     public static MessageType fromOrdinal(int i) {
         switch(i) {
         case 0:
@@ -24,11 +25,13 @@ public enum MessageType {
             return ELEVATOR_CONTINUE_REQUEST;
         case 5:
             return SCHEDULER_DESTINATION_REQUEST;
+        case 6:
+            return ELEVATOR_BUTTON_PUSH_EVENT;
         default:
             return null;
         }
     }
-    
+
     @Override
     public String toString() {
         switch(ordinal()) {
@@ -44,11 +47,14 @@ public enum MessageType {
             return "ELEVATOR_CONTINUE_REQUEST";
         case 5:
             return "SCHEDULER_DESTINATION_REQUEST";
+        case 6:
+            return "ELEVATOR_BUTTON_PUSH_EVENT";
+
         default:
             return "<invalid>";
         }
     }
-    
+
     public void verifyMessage(byte[] data) {
         if (data[0] != ordinal()) {
             throw new RuntimeException("Message failed verification.%n"
