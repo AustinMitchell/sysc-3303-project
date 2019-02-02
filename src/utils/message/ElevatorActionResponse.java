@@ -6,14 +6,17 @@ import main.ElevatorMotor;
 public class ElevatorActionResponse {
     public static final MessageType MESSAGE_TYPE = MessageType.ELEVATOR_ACTION_RESPONSE;
     
-    private byte                        _carID;
-    private ElevatorMotor.MotorMovement _action;
+    private byte                     _carID;
+    private ElevatorMotor.MotorState _action;
     
     /** Returns the car ID property */
-    public int carID() { return _carID; }
+    public int                      carID()     { return _carID; }
+    
+    /** Returns the new motor state */
+    public ElevatorMotor.MotorState action()    { return _action; }
     
     /** Creates a new response object from the given car ID and action to take */
-    public ElevatorActionResponse(int carID, ElevatorMotor.MotorMovement action) {
+    public ElevatorActionResponse(int carID, ElevatorMotor.MotorState action) {
         _carID  = (byte)carID;
         _action = action;
     }
@@ -22,8 +25,8 @@ public class ElevatorActionResponse {
      * third byte is the ElevatorMotor.MotorMovement action */
     public ElevatorActionResponse(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        _carID = inputData[1];
-        _action = ElevatorMotor.MotorMovement.fromOrdinal(inputData[2]);
+        _carID  = inputData[1];
+        _action = ElevatorMotor.MotorState.fromOrdinal(inputData[2]);
     }
     
     /** Converts this object into a byte array. First byte is the message ID, second byte is the car ID, third byte is
