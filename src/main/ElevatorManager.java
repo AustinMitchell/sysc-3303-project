@@ -14,7 +14,7 @@ public class ElevatorManager {
     /* ========== PRIVATE MEMBERS ========== */
 
     private ClientSocket    _schedulerSocket;
-    
+
     private InetAddress     _schedulerIP;
 
     /* ======================================= */
@@ -24,6 +24,7 @@ public class ElevatorManager {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
+    public static final byte[] NUMBER_OF_ELEVATORS = { 1 };
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -107,7 +108,7 @@ public class ElevatorManager {
 
     /**
      * The main running loop for Elevator
-     * @throws IOException 
+     * @throws IOException
      *
      */
     public void loop() throws IOException {
@@ -116,17 +117,20 @@ public class ElevatorManager {
         if (!_schedulerSocket.runSetupAndStartThreads()) {
             throw new RuntimeException("Something went wrong setting up socket; Aborting");
         }
-        
+
+        // Send the number of elevators to the scheduler
+        _schedulerSocket.sendMessage(NUMBER_OF_ELEVATORS);
+
         // Start the main loop
         while (true) {
             // Wait for message from floor socket and send it off to the elevator
             _schedulerSocket.waitForMessage();
             byte[] message = _schedulerSocket.getMessage();
             System.out.println(String.format("Entry as bytes: %s", Arrays.toString(message)));
-            
+
             FloorInputEntry returnMessage = new FloorInputEntry(message);
             System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
-                        
+
             _schedulerSocket.sendMessage(message);
 
         }
@@ -136,7 +140,7 @@ public class ElevatorManager {
      * Starts the main loop
      *
      * @param args
-     * @throws IOException 
+     * @throws IOException
      */
     public static void main(String[] args) throws IOException {
 

@@ -15,6 +15,7 @@ public class Scheduler {
     private ServerSocket    _elevatorSocket;
 
     private int             _numberOfFloors;
+    private int             _numberOfElevators;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -49,6 +50,7 @@ public class Scheduler {
         _floorSocket    = new ServerSocket(PORT_FLOOR);
         _elevatorSocket = new ServerSocket(PORT_ELEVATOR);
         _numberOfFloors = 0;
+        _numberOfElevators = 0;
     }
 
     /* ============================= */
@@ -86,7 +88,13 @@ public class Scheduler {
 
         System.out.println("Floor and Elevator sockets setup");
 
-        // Wait for the floor to send how many floors there are, and then reply
+        // Wait for the elevator to send how many elevators there are
+        _elevatorSocket.waitForMessage();
+        _numberOfElevators = _elevatorSocket.getMessage()[0];
+        System.out.print("Number of elevators: ");
+        System.out.println(_numberOfElevators);
+
+        // Wait for the floor to send how many floors there are
         _floorSocket.waitForMessage();
         _numberOfFloors = _floorSocket.getMessage()[0];
         System.out.print("Number of floors: ");
