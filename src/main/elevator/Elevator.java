@@ -1,6 +1,8 @@
 package main.elevator;
 
 
+import java.util.Arrays;
+
 import utils.DataBox;
 import utils.message.*;
 
@@ -52,8 +54,11 @@ public class Elevator implements Runnable {
     
     @Override
     public void run() {
+        byte[] message;
         while(true) {
-            byte[] message = _messageIncoming.getWhenNotEmpty();
+            message = _messageIncoming.getWhenNotEmpty();
+            
+            System.out.println(String.format("ELEVATOR %d Recieved new message: %s", _carID, Arrays.toString(message)));
             
             switch(MessageType.fromOrdinal(message[0])) {
             case ELEVATOR_ACTION_RESPONSE:
