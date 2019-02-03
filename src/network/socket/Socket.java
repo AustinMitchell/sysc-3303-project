@@ -154,11 +154,13 @@ public abstract class Socket {
                         _recvSocket.receive(_recvPacket);
                         data = _recvPacket.getData();
                         data = Arrays.copyOf(data, _recvPacket.getLength());
-                        _recvQueue.put(data);
                         if (_observer != null) {
                             synchronized(_observer) {
+                                _recvQueue.put(data);
                                 _observer.notifyAll();
                             }
+                        } else {
+                            _recvQueue.put(data);
                         }
                     } catch (IOException e) {
                         System.err.println();

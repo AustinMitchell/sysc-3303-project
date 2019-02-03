@@ -4,14 +4,15 @@ package main.elevator;
 import java.util.Arrays;
 
 import utils.DataBox;
+import utils.DataQueueBox;
 import utils.message.*;
 
 public class Elevator implements Runnable {
-    public static final int FLOOR_MOVEMENT_TIMEOUT = 5000;
-    public static final int DOOR_MOVEMENT_TIMEOUT = 2000;
+    public static final int FLOOR_MOVEMENT_TIMEOUT = 2000;
+    public static final int DOOR_MOVEMENT_TIMEOUT = 500;
 
     private DataBox<byte[]>     _messageOutgoing;
-    private DataBox<byte[]>     _messageIncoming;
+    private DataQueueBox<byte[]> _messageIncoming;
     
     private Object              _observer;
     
@@ -33,7 +34,7 @@ public class Elevator implements Runnable {
      * @param carID         ID of this car, used for message construction
      */
     public Elevator(Object observer, int numFloors, int carID) {
-        _messageIncoming = new DataBox<>();
+        _messageIncoming = new DataQueueBox<>();
         _messageOutgoing = new DataBox<>();
         
         _observer       = observer;
@@ -62,12 +63,15 @@ public class Elevator implements Runnable {
             
             switch(MessageType.fromOrdinal(message[0])) {
             case ELEVATOR_ACTION_RESPONSE:
+                System.out.println("Recieved new ElevatorActionResponse");
                 handleActionResponse(new ElevatorActionResponse(message));
                 break;
             case ELEVATOR_CONTINUE_RESPONSE:
+                System.out.println("Recieved new ElevatorContinueResponse");
                 handleContinueResponse(new ElevatorContinueResponse(message));
                 break;
             case SCHEDULER_DESTINATION_REQUEST:
+                System.out.println("Recieved new SchedulerDestinationRequest");
                 handleSchedulerDestinationRequest(new SchedulerDestinationRequest(message));
                 break;
             default:
@@ -100,6 +104,7 @@ public class Elevator implements Runnable {
     private void handleActionResponse(ElevatorActionResponse actionResponse) {
         _motor.setMotorState(actionResponse.action());
         if (_motor.motorState() != ElevatorMotor.MotorState.STATIONARY) {
+            // Simulates the time the elevator would take to move to a new floor
             try {
                 Thread.sleep(FLOOR_MOVEMENT_TIMEOUT);
             } catch (InterruptedException e) {
@@ -107,6 +112,7 @@ public class Elevator implements Runnable {
             }
 
             // Emulating an elevator sensor. Request whether to stop or continue
+            System.out.println("ELEVATOR 0 Sending new ElevatorContinueRequest");
             putOutgoingMessage(new ElevatorContinueRequest(_carID).toBytes());
 
         }
@@ -114,7 +120,8 @@ public class Elevator implements Runnable {
     
     private void handleContinueResponse(ElevatorContinueResponse continueResponse) {
         // Checks if the car needs to stop or not
-        if (continueResponse.response() != -1) {
+        if (continueResponse.response() == -1) {
+            // Simulates the time the elevator would take to move to a new floor
             try {
                 Thread.sleep(FLOOR_MOVEMENT_TIMEOUT);
             } catch (InterruptedException e) {
@@ -122,6 +129,7 @@ public class Elevator implements Runnable {
             }
 
             // Emulating an elevator sensor. Request whether to stop or continue
+            System.out.println("ELEVATOR 0 Sending new ElevatorContinueRequest");
             putOutgoingMessage(new ElevatorContinueRequest(_carID).toBytes());
 
         } else {
@@ -155,6 +163,7 @@ public class Elevator implements Runnable {
         _door.closeDoor();
         
         // Requests for a new action
+        System.out.println("ELEVATOR 0 Sending new ElevatorActionRequest");
         putOutgoingMessage(new ElevatorActionRequest(_carID).toBytes());
     }
 }

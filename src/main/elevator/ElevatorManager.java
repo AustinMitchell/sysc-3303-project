@@ -121,18 +121,15 @@ public class ElevatorManager {
         synchronized(this) {
             while (true) {
                 byte[] message;
-                try {
-                    // Waits to be notified of a new message
-                    wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 
                 // Checks the socket for new messages to send to an elevator
-                message = _schedulerSocket.getMessage();
-                if (message != null) {
-                    System.out.println("Recieved new message: " + Arrays.toString(message));
-                    _elevators[0].putMessage(message);
+                while(_schedulerSocket.hasMessage()) {
+                    message = _schedulerSocket.getMessage();
+                    if (message != null) {
+                        System.out.println("--------------------------------------");
+                        System.out.println("Recieved new message: " + Arrays.toString(message));
+                        _elevators[0].putMessage(message);
+                    }
                 }
                 
                 // Checks elevators for messages to send to the socket
@@ -141,6 +138,13 @@ public class ElevatorManager {
                     if (message != null) {
                         _schedulerSocket.sendMessage(message);
                     }
+                }
+                
+                try {
+                    // Waits to be notified of a new message
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }

@@ -18,9 +18,9 @@ public class ElevatorContinueResponse {
      * not continue.
      * @param carID     ID of the car to send the message to
      * @param floor     Floor to stop at, used to control the elevator lamps*/
-    public ElevatorContinueResponse(int carID, byte floor) {
+    public ElevatorContinueResponse(int carID, int floor) {
         _carID = (byte)carID;
-        _floor = floor;
+        _floor = (byte)floor;
     }
     
     /**

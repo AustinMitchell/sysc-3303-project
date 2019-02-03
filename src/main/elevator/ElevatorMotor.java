@@ -21,6 +21,20 @@ public class ElevatorMotor {
                 return null;
             }
         }
+        
+        @Override
+        public String toString() {
+            switch(this) {
+            case UP:
+                return "UP";
+            case DOWN:
+                return "DOWN";
+            case STATIONARY:
+                return "STATIONARY";
+            default:
+                return "<invalid>";
+            }
+        }
     }
 
     /* ===================================== */
