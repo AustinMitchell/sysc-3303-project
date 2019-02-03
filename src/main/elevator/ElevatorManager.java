@@ -1,12 +1,11 @@
-package main;
+package main.elevator;
 
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 
+import main.Scheduler;
 import network.socket.ClientSocket;
-import utils.*;
-import utils.message.FloorInputEntry;
 
 public class ElevatorManager {
 
@@ -16,6 +15,10 @@ public class ElevatorManager {
     private ClientSocket    _schedulerSocket;
 
     private InetAddress     _schedulerIP;
+    
+    private Elevator[]      _elevators;
+    
+    private int             _numFloors;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -24,7 +27,7 @@ public class ElevatorManager {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-    public static final byte[] NUMBER_OF_ELEVATORS = { 1 };
+    public static final int NUMBER_OF_ELEVATORS = 1;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -50,6 +53,8 @@ public class ElevatorManager {
             System.exit(1);
         }
 
+        _elevators = new Elevator[NUMBER_OF_ELEVATORS];
+        
         // Initialize the scheduler socket
         this.initializeSchedulerSocket();
     }
@@ -68,6 +73,8 @@ public class ElevatorManager {
             System.exit(1);
         }
 
+        _elevators = new Elevator[NUMBER_OF_ELEVATORS];
+        
         // Initialize the Scheduler socket
         this.initializeSchedulerSocket();
     }
@@ -80,30 +87,11 @@ public class ElevatorManager {
      */
     private void initializeSchedulerSocket() {
         try {
-            _schedulerSocket = new ClientSocket(_schedulerIP, Scheduler.PORT_ELEVATOR);
+            _schedulerSocket = new ClientSocket(this, _schedulerIP, Scheduler.PORT_ELEVATOR);
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
         }
-    }
-
-    /**
-     * Helper function to log the data of a packet
-     *
-     * @param packet
-     */
-    private void logPacket(DatagramPacket packet) {
-        System.out.println("===== Elevator: Packet Data =====");
-        System.out.println("To host:          " + packet.getAddress());
-        System.out.println("Destination port: " + packet.getPort());
-        System.out.println("Length:           " + packet.getLength());
-        System.out.println("Contains:         " + new String(packet.getData(), 0, packet.getLength()));
-        System.out.print("Byte array:       ");
-        for (int j = 0; j < packet.getLength(); j++) {
-            System.out.print(packet.getData()[j] + " ");
-        }
-
-        System.out.println("");
     }
 
     /**
@@ -119,20 +107,42 @@ public class ElevatorManager {
         }
 
         // Send the number of elevators to the scheduler
-        _schedulerSocket.sendMessage(NUMBER_OF_ELEVATORS);
+        _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_ELEVATORS});
 
+        // Wait for scheduler to send off number of floors
+        _numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
+        
+        for (int i=0; i<NUMBER_OF_ELEVATORS; i++) {
+            _elevators[i] = new Elevator(this, _numFloors, i);
+            new Thread(_elevators[i]).start();
+        }
+                
         // Start the main loop
-        while (true) {
-            // Wait for message from floor socket and send it off to the elevator
-            _schedulerSocket.waitForMessage();
-            byte[] message = _schedulerSocket.getMessage();
-            System.out.println(String.format("Entry as bytes: %s", Arrays.toString(message)));
-
-            FloorInputEntry returnMessage = new FloorInputEntry(message);
-            System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
-
-            _schedulerSocket.sendMessage(message);
-
+        synchronized(this) {
+            while (true) {
+                byte[] message;
+                try {
+                    // Waits to be notified of a new message
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                
+                // Checks the socket for new messages to send to an elevator
+                message = _schedulerSocket.getMessage();
+                if (message != null) {
+                    System.out.println("Recieved new message: " + Arrays.toString(message));
+                    _elevators[0].putMessage(message);
+                }
+                
+                // Checks elevators for messages to send to the socket
+                for (Elevator e: _elevators) {
+                    message = e.getMessage();
+                    if (message != null) {
+                        _schedulerSocket.sendMessage(message);
+                    }
+                }
+            }
         }
     }
 

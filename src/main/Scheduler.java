@@ -47,8 +47,8 @@ public class Scheduler {
      * @throws SocketException
      */
     public Scheduler() throws SocketException, UnknownHostException {
-        _floorSocket    = new ServerSocket(PORT_FLOOR);
-        _elevatorSocket = new ServerSocket(PORT_ELEVATOR);
+        _floorSocket    = new ServerSocket(this, PORT_FLOOR);
+        _elevatorSocket = new ServerSocket(this, PORT_ELEVATOR);
         _numberOfFloors = 0;
         _numberOfElevators = 0;
     }
@@ -89,26 +89,39 @@ public class Scheduler {
         System.out.println("Floor and Elevator sockets setup");
 
         // Wait for the elevator to send how many elevators there are
-        _elevatorSocket.waitForMessage();
-        _numberOfElevators = _elevatorSocket.getMessage()[0];
+        _numberOfElevators = _elevatorSocket.getMessageWhenNotEmpty()[0];
         System.out.print("Number of elevators: ");
         System.out.println(_numberOfElevators);
 
         // Wait for the floor to send how many floors there are
-        _floorSocket.waitForMessage();
-        _numberOfFloors = _floorSocket.getMessage()[0];
+        _numberOfFloors = _floorSocket.getMessageWhenNotEmpty()[0];
         System.out.print("Number of floors: ");
         System.out.println(_numberOfFloors);
+        
+        // Send the number of floors to the elevator so it can instantiate properly
+        System.out.println("Sending number of floors to elevator");
+        _elevatorSocket.sendMessage(new byte[] {(byte)_numberOfFloors});
 
 
-        while(_floorSocket.isConnected() && _elevatorSocket.isConnected()) {
-            // Wait for message from floor socket and send it off to the elevator
-            _floorSocket.waitForMessage();
-            _elevatorSocket.sendMessage(_floorSocket.getMessage());
-
-            // Wait for message from elevator socket and send it off to the floor
-            _elevatorSocket.waitForMessage();
-            _floorSocket.sendMessage(_elevatorSocket.getMessage());
+        synchronized(this) {
+            byte[] message;
+            while(_floorSocket.isConnected() && _elevatorSocket.isConnected()) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                
+                message = _floorSocket.getMessage();
+                if (message != null) {
+                    _elevatorSocket.sendMessage(message);
+                }
+                
+                message = _elevatorSocket.getMessage();
+                if (message != null) {
+                    _floorSocket.sendMessage(message);
+                }    
+            }
         }
 
     }
