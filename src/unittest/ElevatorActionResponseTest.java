@@ -15,10 +15,10 @@ public class ElevatorActionResponseTest {
         MessageType messageTestType = MessageType.ELEVATOR_ACTION_RESPONSE;
         int carID = 5;
         MotorState motorMovement = MotorState.STATIONARY;
-        byte[] data = new byte[] {(byte)messageTestType.ordinal(), (byte)carID, (byte)motorMovement.ordinal()};
+        byte[] data = new byte[] {(byte)messageTestType.ordinal(), (byte)carID, 0, (byte)motorMovement.ordinal()};
 
         ElevatorActionResponse request1 = new ElevatorActionResponse(data);
-        ElevatorActionResponse request2 = new ElevatorActionResponse(carID, motorMovement);
+        ElevatorActionResponse request2 = new ElevatorActionResponse(carID, false, motorMovement);
 
         assertEquals((byte)carID, request1.carID());
         assertEquals(messageTestType.ordinal(), request1.toBytes()[0]);

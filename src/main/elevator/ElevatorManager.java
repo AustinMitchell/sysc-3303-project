@@ -15,9 +15,9 @@ public class ElevatorManager {
     private ClientSocket    _schedulerSocket;
 
     private InetAddress     _schedulerIP;
-    
+
     private Elevator[]      _elevators;
-    
+
     private int             _numFloors;
 
     /* ======================================= */
@@ -54,7 +54,7 @@ public class ElevatorManager {
         }
 
         _elevators = new Elevator[NUMBER_OF_ELEVATORS];
-        
+
         // Initialize the scheduler socket
         this.initializeSchedulerSocket();
     }
@@ -74,7 +74,7 @@ public class ElevatorManager {
         }
 
         _elevators = new Elevator[NUMBER_OF_ELEVATORS];
-        
+
         // Initialize the Scheduler socket
         this.initializeSchedulerSocket();
     }
@@ -111,17 +111,17 @@ public class ElevatorManager {
 
         // Wait for scheduler to send off number of floors
         _numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
-        
+
         for (int i=0; i<NUMBER_OF_ELEVATORS; i++) {
             _elevators[i] = new Elevator(this, _numFloors, i);
             new Thread(_elevators[i]).start();
         }
-                
+
         // Start the main loop
         synchronized(this) {
             while (true) {
                 byte[] message;
-                
+
                 // Checks the socket for new messages to send to an elevator
                 while(_schedulerSocket.hasMessage()) {
                     message = _schedulerSocket.getMessage();
@@ -131,7 +131,7 @@ public class ElevatorManager {
                         _elevators[0].putMessage(message);
                     }
                 }
-                
+
                 // Checks elevators for messages to send to the socket
                 for (Elevator e: _elevators) {
                     message = e.getMessage();
@@ -139,7 +139,7 @@ public class ElevatorManager {
                         _schedulerSocket.sendMessage(message);
                     }
                 }
-                
+
                 try {
                     // Waits to be notified of a new message
                     wait();

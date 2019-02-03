@@ -52,7 +52,8 @@ public class Scheduler {
 
     private boolean[]                   _elevatorIdle;
     private int[]                       _currentFloor;
-    private TreeSet<Integer>[]          _targetFloor;
+    //private TreeSet<Integer>[]          _targetFloor;
+    private int[]                       _targetFloor;
     private FloorInputEntry[]           _targetFloorEntry;
     private ElevatorMotor.MotorState[]  _currentMotorState;
 
@@ -148,14 +149,15 @@ public class Scheduler {
 
         _elevatorIdle       = new boolean[_numberOfElevators];
         _currentFloor       = new int[_numberOfElevators];
-        _targetFloor        = (TreeSet<Integer>[])new TreeSet[_numberOfElevators];
+        //_targetFloor        = (TreeSet<Integer>[])new TreeSet[_numberOfElevators];
+        _targetFloor        = new int[_numberOfElevators];
         _targetFloorEntry   = new FloorInputEntry[_numberOfElevators];
         _currentMotorState  = new ElevatorMotor.MotorState[_numberOfElevators];
 
         for (int i=0; i<_numberOfElevators; i++) {
             _elevatorIdle[i]        = true;
             _currentFloor[i]        = 0;
-            _targetFloor[i]         = new TreeSet<>();
+            _targetFloor[i]         = -1;
             _targetFloorEntry[i]    = null;
             _currentMotorState[i]   = ElevatorMotor.MotorState.STATIONARY;
         }
@@ -200,9 +202,9 @@ public class Scheduler {
                     }    
                 }
 
-                
+
                 System.out.println(String.format("Elevator 0 position:      %d", _currentFloor[0]));
-                System.out.println(String.format("Elevator 0 target:        %s", (_targetFloor[0].isEmpty()) ? "(none)" : _targetFloor[0].first()));
+                System.out.println(String.format("Elevator 0 target:        %s", (_targetFloor[0] == -1) ? "(none)" : _targetFloor[0]));
                 System.out.println(String.format("Elevator 0 motor:         %s", _currentMotorState[0]));
                 System.out.println(String.format("Elevator 0 floor entry:   %s", _targetFloorEntry[0]));
                 System.out.println("---------------------------");
@@ -217,20 +219,15 @@ public class Scheduler {
 
     }
 
-    public void handleFloorInputEntry(FloorInputEntry newEntry) {
+    private void handleFloorInputEntry(FloorInputEntry newEntry) {
         for(int i=0; i<_numberOfElevators; i++) {
             if (_elevatorIdle[i]) {
                 // Set up next elevator destination
                 System.out.println("> Assigning new entry from floor");
-                _targetFloor[i]         = new TreeSet<>(COMPARATOR.get(newEntry.direction()));
-                _targetFloor[i].add(newEntry.floor());
-
-                _elevatorIdle[i]        = false;
-                _targetFloorEntry[i]    = newEntry;
-                _currentMotorState[i]   = (newEntry.floor() > _currentFloor[i]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
+                assignNewEntry(i, newEntry);
                 // Send a message to startup the elevator
                 System.out.println("    Sending new ElevatorActionResponse");
-                _elevatorSocket.sendMessage(new ElevatorActionResponse(i, _currentMotorState[i]).toBytes());
+                _elevatorSocket.sendMessage(new ElevatorActionResponse(i, true, _currentMotorState[i]).toBytes());
                 return;
             }
         }
@@ -240,14 +237,15 @@ public class Scheduler {
         _floorEntries.add(newEntry);
     }
 
-    public void handleElevatorActionRequest(ElevatorActionRequest request) {
+    private void handleElevatorActionRequest(ElevatorActionRequest request) {
         int id = request.carID();
 
-        if (!_targetFloor[id].isEmpty()) {
+        if (_targetFloor[id] != -1) {
             System.out.println("> Going to destination");
-            _elevatorIdle[id]       = true;
             _targetFloorEntry[id]   = null;
-            _currentMotorState[id]  = (_targetFloor[id].first() > _currentFloor[id]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
+            _elevatorIdle[id]       = false;
+            _targetFloorEntry[id]   = null;
+            _currentMotorState[id]  = (_targetFloor[id] > _currentFloor[id]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
         } else if (_floorEntries.isEmpty()) {
             // Disengage elevator
             System.out.println("> Disengaging elevator");
@@ -258,26 +256,29 @@ public class Scheduler {
             // Set up next elevator destination
             System.out.println("> Assigning new entry from queue");
             FloorInputEntry newEntry =  _floorEntries.remove(0);
-            _targetFloor[id]         = new TreeSet<>(COMPARATOR.get(newEntry.direction()));
-            _targetFloor[id].add(newEntry.floor());
-            
-            _elevatorIdle[id]        = false;
-            _targetFloorEntry[id]    = newEntry;
-            _currentMotorState[id]   = (newEntry.floor() > _currentFloor[id]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
+            assignNewEntry(id, newEntry);
         }
 
-        // Send a response to the elevator
+        // Send a response to the elevator with direction it will need to go
         System.out.println("    Sending new ElevatorActionResponse");
-        _elevatorSocket.sendMessage(new ElevatorActionResponse(id, _currentMotorState[id]).toBytes());
+        _elevatorSocket.sendMessage(new ElevatorActionResponse(id, !_elevatorIdle[id], _currentMotorState[id]).toBytes());
     }
 
-    public void handleElevatorContinueRequest(ElevatorContinueRequest request) {
+    private void handleElevatorContinueRequest(ElevatorContinueRequest request) {
         int id = request.carID();
         int response;
-        _currentFloor[id] += (_currentMotorState[id] == ElevatorMotor.MotorState.UP) ? 1 : -1;
 
-        if (_currentFloor[id] == _targetFloor[id].first()) {
-            _targetFloor[id].pollFirst();
+        _currentMotorState[id] = request.actionTaken();
+
+        // If motor is engaged, change floor
+        if (_currentMotorState[id] == ElevatorMotor.MotorState.UP) {
+            _currentFloor[id] += 1;
+        } else if (_currentMotorState[id] == ElevatorMotor.MotorState.DOWN) {
+            _currentFloor[id] -= 1;
+        }
+
+        if (_currentFloor[id] == _targetFloor[id]) {
+            _targetFloor[id] = -1;
             response = _currentFloor[id];
         } else {
             response = -1;
@@ -300,22 +301,24 @@ public class Scheduler {
         }
     }
 
-    public void handleElevatorButtonPushEvent(ElevatorButtonPushEvent event) {
+    private void handleElevatorButtonPushEvent(ElevatorButtonPushEvent event) {
         int id = event.carID();
-        ElevatorMotor.MotorState newMotorState = (event.floorNumber() > _currentFloor[id]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
 
-        if (newMotorState != _currentMotorState[id]) {
-            if (newMotorState == ElevatorMotor.MotorState.UP) {
-                _targetFloor[id] = new TreeSet<>(COMPARATOR.get(Direction.UP));
-            } else {
-                _targetFloor[id] = new TreeSet<>(COMPARATOR.get(Direction.DOWN));
-            }
-        }
-
-        _targetFloor[id].add(event.floorNumber());
-        _currentMotorState[id]  = (event.floorNumber() > _currentFloor[id]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
-        _elevatorIdle[id]       = false;
+        _targetFloor[id]        = _targetFloorEntry[id].destination();
         _targetFloorEntry[id]   = null;
+    }
+    
+    private void assignNewEntry(int carID, FloorInputEntry entry) {
+        _targetFloor[carID]         = entry.floor();
+        _elevatorIdle[carID]        = false;
+        _targetFloorEntry[carID]    = entry;
+        if (entry.floor() > _currentFloor[carID]) {
+            _currentMotorState[carID] = ElevatorMotor.MotorState.UP;
+        } else if (entry.floor() < _currentFloor[carID]) {
+            _currentMotorState[carID] = ElevatorMotor.MotorState.DOWN;
+        } else {
+            _currentMotorState[carID] = ElevatorMotor.MotorState.STATIONARY;
+        }
     }
 
     public static void main(String[] args) throws SocketException, UnknownHostException  {
