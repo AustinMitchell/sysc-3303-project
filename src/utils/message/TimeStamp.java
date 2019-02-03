@@ -1,18 +1,16 @@
-package utils;
+package utils.message;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.regex.*;
 
-public class TimeStamp implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class TimeStamp implements Comparable<TimeStamp> {
 
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("^(\\d{2}):(\\d{2}):(\\d{2})\\.(\\d{1,3})$");
 
-    private int _hour;
-    private int _minute;
-    private int _second;
-    private int _millisecond;
+    private byte  _hour;
+    private byte  _minute;
+    private byte  _second;
+    private short _millisecond;
 
     /** Return the hour of timestamp */
     public int hour()        { return _hour; }
@@ -31,10 +29,10 @@ public class TimeStamp implements Serializable {
      * @param millisecond
      */
     public TimeStamp(int hour, int minute, int second, int millisecond) {
-        _hour        = hour;
-        _minute      = minute;
-        _second      = second;
-        _millisecond = millisecond;
+        _hour        = (byte)hour;
+        _minute      = (byte)minute;
+        _second      = (byte)second;
+        _millisecond = (short)millisecond;
     }
 
     /**
@@ -49,12 +47,12 @@ public class TimeStamp implements Serializable {
         Matcher match = TIMESTAMP_PATTERN.matcher(timeStamp);
         match.matches();
 
-        _hour        = Integer.parseInt(match.group(1));
-        _minute      = Integer.parseInt(match.group(2));
-        _second      = Integer.parseInt(match.group(3));
-        _millisecond = Integer.parseInt(match.group(4));
+        _hour        = (byte)Integer.parseInt(match.group(1));
+        _minute      = (byte)Integer.parseInt(match.group(2));
+        _second      = (byte)Integer.parseInt(match.group(3));
+        _millisecond = (short)Integer.parseInt(match.group(4));
     }
-    
+
     /**
      * Construct a timestamp object from a byte array. Only the first 5 bytes will be considered: 1 byte for hours, minutes and seconds, 2 bytes for milliseconds
      * @param bytes
@@ -67,13 +65,39 @@ public class TimeStamp implements Serializable {
         _millisecond = bytesWrapper.getShort();
     }
 
+    /**
+     * Calculates the timestamp in milliseconds
+     *
+     * @return time in milliseconds
+     */
+    public int toMilliseconds() {
+        return (this._hour * 60 * 60 * 1000) +
+               (this._minute * 60 * 1000) +
+               (this._second * 1000) +
+               this._millisecond;
+    }
+
     @Override
     public String toString() {
         return String.format("%02d:%02d:%02d.%03d", _hour, _minute, _second, _millisecond);
     }
-    
+
     /** Converts TimeStamp to an array of bytes. First three bytes are the hour, minutes and second, last two bytes are milliseconds */
     public byte[] toBytes() {
-        return ByteBuffer.allocate(5).put((byte)_hour).put((byte)_minute).put((byte)_second).putShort((short)_millisecond).array();
+        return ByteBuffer.allocate(5).put(_hour).put(_minute).put(_second).putShort(_millisecond).array();
+    }
+
+    /** Compares this timestamp to another timestamp. Earlier timestamps are considered "less than" later timestamps */
+    @Override
+    public int compareTo(TimeStamp other) {
+        if (this._hour != other._hour) {
+            return this._hour - other._hour;
+        } else if (this._minute != other._minute) {
+            return this._minute - other._minute;
+        } else if (this._second != other._second) {
+            return this._second - other._second;
+        } else {
+            return this._millisecond - other._millisecond;
+        }
     }
 }

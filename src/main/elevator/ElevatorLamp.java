@@ -1,10 +1,9 @@
-package main;
+package main.elevator;
 
 public class ElevatorLamp {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private int     _floorNumber    = 0;
     private boolean _isLit          = false;
 
     /* ======================================= */
@@ -19,31 +18,18 @@ public class ElevatorLamp {
     /* ============================= */
     /* ========== SETTERS ========== */
 
-    /**
-     * Sets the state of the lamp to ON
-     */
+    /** Sets the state of the lamp to ON */
     public void turnON() {
         this._isLit = true;
     }
 
-    /**
-     * Sets the state of the lamp to OFF
-     */
+    /** Sets the state of the lamp to OFF */
     public void turnOFF() {
         this._isLit = false;
     }
-
+    
     /* ============================= */
     /* ========== GETTERS ========== */
-
-    /**
-     * Retrieves the floor number of the lamp
-     *
-     * @return the floor number of the lamp
-     */
-    public int floorNumber() {
-        return this._floorNumber;
-    }
 
     /**
      * Retrieves whether the lamp is ON or OFF
@@ -57,13 +43,9 @@ public class ElevatorLamp {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * ElevatorLamp constructor
-     *
-     * @param floorNumber
-     */
-    public ElevatorLamp(int floorNumber) {
-        this._floorNumber = floorNumber;
+    /** ElevatorLamp constructor. Initially lamp will be turned off. */
+    public ElevatorLamp() {
+        _isLit = false;
     }
 
     /* ============================= */

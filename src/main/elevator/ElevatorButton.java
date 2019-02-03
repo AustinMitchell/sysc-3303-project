@@ -1,59 +1,38 @@
-package main;
+package main.elevator;
 
-public class ElevatorDoor {
+public class ElevatorButton {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private boolean _isOpen = false;
+    private ElevatorLamp    _targetLamp;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
 
-
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-
-
     /* ============================= */
     /* ========== SETTERS ========== */
-
-    /**
-     * sets the state of the door to 'open'
-     */
-    public void openDoor() {
-        this._isOpen = true;
-    }
-
-    /**
-     * sets the state of the door to 'closed'
-     */
-    public void closeDoor() {
-        this._isOpen = false;
-    }
-
+    
     /* ============================= */
     /* ========== GETTERS ========== */
-
-    /**
-     * indicates if the door is open or closed
-     *
-     * @return door opened or closed (open = true, close = false)
-     */
-    public boolean isOpen() {
-        return this._isOpen;
-    }
-
+    
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * ElevatorDoor Constructor
+    /** 
+     * Elevator button constructor. When pressed, it turns {targetLamp} on.
+     * @param targetLamp    Target lamp to turn on when pressed 
      */
-    public ElevatorDoor() {
-        // empty stub
+    public ElevatorButton(ElevatorLamp targetLamp) {
+        _targetLamp = targetLamp;
     }
 
     /* ============================= */
     /* ========== METHODS ========== */
+    
+    public void pressButton() {
+        _targetLamp.turnON();
+    }
 }

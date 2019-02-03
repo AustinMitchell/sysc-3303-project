@@ -1,4 +1,4 @@
-package network;
+package network.socket;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import utils.DataQueueBox;
 import utils.WorkerThread;
 
 /**
@@ -25,17 +26,18 @@ public abstract class Socket {
 
     protected static final int BUFFER_LENGTH = 100;
 
-    protected InetAddress       _targetAddress;
+    protected InetAddress           _targetAddress;
 
-    protected DatagramSocket    _sendSocket;
-    protected DatagramSocket    _recvSocket;
-    protected DatagramPacket    _sendPacket;
-    protected DatagramPacket    _recvPacket;
+    protected DatagramSocket        _sendSocket;
+    protected DatagramSocket        _recvSocket;
+    protected DatagramPacket        _sendPacket;
+    protected DatagramPacket        _recvPacket;
 
-    protected Queue<byte[]>     _sendQueue;
-    protected Queue<byte[]>     _recvQueue;
+    protected DataQueueBox<byte[]>  _sendQueue;
+    protected DataQueueBox<byte[]>  _recvQueue;
 
-    protected boolean           _running;
+    protected boolean               _running;
+    protected Object                _observer;
 
     /* ============================= */
     /* ========== GETTERS ========== */
@@ -69,28 +71,38 @@ public abstract class Socket {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /** Constructs a new Socket with a specific port to recieve on (usually for server sockets) */
-    public Socket(int recievePort) throws SocketException {
+    /**
+     * Constructs a new Socket with a specific port to recieve on (usually for server sockets)
+     * @param observer      Object to be notified of new messages
+     * @param recievePort   Port to listen on
+     */
+    public Socket(Object observer, int recievePort) throws SocketException {
         _sendSocket = new DatagramSocket();
-        _recvSocket	= new DatagramSocket(recievePort);
+        _recvSocket = new DatagramSocket(recievePort);
 
         _recvPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
         _sendPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
 
-        _sendQueue	= new LinkedList<>();
-        _recvQueue	= new LinkedList<>();
+        _sendQueue  = new DataQueueBox<>();
+        _recvQueue  = new DataQueueBox<>();
+        
+        _observer   = observer;
     }
 
-    /** Constructs a new Socket without a specific port to recieve on (usually for client sockets) */
-    public Socket() throws SocketException {
+    /** Constructs a new Socket without a specific port to recieve on (usually for client sockets)
+     * @param observer      Object to be notified of new messages
+     */
+    public Socket(Object observer) throws SocketException {
         _sendSocket = new DatagramSocket();
         _recvSocket = new DatagramSocket();
 
         _recvPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
         _sendPacket = new DatagramPacket(new byte[BUFFER_LENGTH], BUFFER_LENGTH);
 
-        _sendQueue  = new LinkedList<>();
-        _recvQueue  = new LinkedList<>();
+        _sendQueue  = new DataQueueBox<>();
+        _recvQueue  = new DataQueueBox<>();
+        
+        _observer   = observer;
     }
 
     /* ============================= */
@@ -98,35 +110,27 @@ public abstract class Socket {
 
     /** Returns true if there are any items in the send queue that haven't been sent */
     public boolean isSendQueueEmpty() { 
-        synchronized (_sendQueue) {
-            return _sendQueue.isEmpty();
-        }
+        return _sendQueue.isEmpty();
     }
 
     /** Appends a new message in the queue to send */
     public void sendMessage(byte[] bytes) {
-        synchronized (_sendQueue) {
-            _sendQueue.add(Arrays.copyOf(bytes, bytes.length));
-        }
+        _sendQueue.put(Arrays.copyOf(bytes, bytes.length));
     }
 
     /** Returns true if there are any items in the receiving queue to get */
     public boolean hasMessage() {
-        synchronized (_recvQueue) {
-            return !_recvQueue.isEmpty();
-        }
+        return !_recvQueue.isEmpty();
     }
 
     /** Blocks execution until there's a message in the receiving queue */
-    public void waitForMessage() {
-        while(!hasMessage());
+    public byte[] getMessageWhenNotEmpty() {
+        return _recvQueue.getWhenNotEmpty();
     }
 
     /** Polls the receiving queue for a new message */
     public byte[] getMessage() {
-        synchronized (_recvQueue) {
-            return _recvQueue.poll();
-        }
+        return _recvQueue.get();
     }
 
     /** This function will attempt to establish communications with another socket. How this is accomplished is determined by a child class*/
@@ -150,8 +154,13 @@ public abstract class Socket {
                         _recvSocket.receive(_recvPacket);
                         data = _recvPacket.getData();
                         data = Arrays.copyOf(data, _recvPacket.getLength());
-                        synchronized (_recvQueue) {
-                            _recvQueue.add(data);
+                        if (_observer != null) {
+                            synchronized(_observer) {
+                                _recvQueue.put(data);
+                                _observer.notifyAll();
+                            }
+                        } else {
+                            _recvQueue.put(data);
                         }
                     } catch (IOException e) {
                         System.err.println();
@@ -167,25 +176,12 @@ public abstract class Socket {
         new Thread(new Runnable(){
             @Override
             public void run() {
-                boolean hasData = false;
                 while(_running) {
                     try {
-                        Thread.sleep(10);
-                        synchronized (_sendQueue) {
-                            if (!_sendQueue.isEmpty()) {
-                                byte[] data = _sendQueue.poll();
-                                _sendPacket.setData(data);
-                                _sendPacket.setLength(data.length);
-                                hasData = true;
-                            }
-                        }
-                        if (hasData) {
-                            _sendSocket.send(_sendPacket);
-                            hasData = false;
-                        }
-                    } catch (InterruptedException e) {
-                        System.err.println();
-                        e.printStackTrace();
+                        byte[] data = _sendQueue.getWhenNotEmpty();
+                        _sendPacket.setData(data);
+                        _sendPacket.setLength(data.length);
+                        _sendSocket.send(_sendPacket);
                     } catch (IOException e) {
                         System.err.println();
                         e.printStackTrace();

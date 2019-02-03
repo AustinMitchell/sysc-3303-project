@@ -1,10 +1,10 @@
-package main;
+package main.elevator;
 
-public class ElevatorButton {
+public class ElevatorDoor {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private int _floorNumber = 0;
+    private boolean _isOpen;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -19,31 +19,36 @@ public class ElevatorButton {
     /* ========== SETTERS ========== */
 
 
-
     /* ============================= */
     /* ========== GETTERS ========== */
 
     /**
-     * Retrieves the floor number of the button
+     * indicates if the door is open or closed
      *
-     * @return floor number
+     * @return door opened or closed (open = true, close = false)
      */
-    public int floorNumber() {
-        return this._floorNumber;
+    public boolean isOpen() {
+        return this._isOpen;
     }
 
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * Elevator button constructor
-     *
-     * @param floorNumber
-     */
-    public ElevatorButton(int floorNumber) {
-        this._floorNumber = floorNumber;
+    /** ElevatorDoor Constructor. Sets initial status of door to closed. */
+    public ElevatorDoor() {
+        _isOpen = false;
     }
 
     /* ============================= */
     /* ========== METHODS ========== */
+    
+    /** sets the state of the door to 'open' */
+    public void openDoor() {
+        this._isOpen = true;
+    }
+
+    /** sets the state of the door to 'closed' */
+    public void closeDoor() {
+        this._isOpen = false;
+    }
 }

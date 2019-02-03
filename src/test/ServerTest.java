@@ -1,18 +1,18 @@
 package test;
 
-import network.*;
+import network.socket.ServerSocket;
 
 public class ServerTest {
     public static void main(String[] args) throws Exception {
-        ServerSocket socket = new ServerSocket(3000);
+        Object observer = new Object();
+        ServerSocket socket = new ServerSocket(observer, 3000);
 
         System.out.println("Waiting for client...");
         socket.runSetupAndStartThreads();
         System.out.println("Client connected");
         
         while(true) {
-            socket.waitForMessage();
-            String message = new String(socket.getMessage());
+            String message = new String(socket.getMessageWhenNotEmpty());
             System.out.println("Received message " + message);
             
             if (message.equals("exit")) {

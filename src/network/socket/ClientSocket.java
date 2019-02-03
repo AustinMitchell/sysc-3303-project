@@ -1,4 +1,4 @@
-package network;
+package network.socket;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -23,14 +23,14 @@ public class ClientSocket extends Socket {
     /* ========== CONSTRUCTORS ========== */
     
     /** Constructs an socket with the destination address and port set */
-    public ClientSocket(String sendAddress, int sendPort) throws SocketException, UnknownHostException {
-        super();
+    public ClientSocket(Object observer, String sendAddress, int sendPort) throws SocketException, UnknownHostException {
+        super(observer);
         setSendDestination(sendAddress, sendPort);
     }
     
     /** Constructs an socket with the destination address and port set */
-    public ClientSocket(InetAddress sendAddress, int sendPort) throws SocketException {
-        super();
+    public ClientSocket(Object observer, InetAddress sendAddress, int sendPort) throws SocketException {
+        super(observer);
         setSendDestination(sendAddress, sendPort);
     }
     

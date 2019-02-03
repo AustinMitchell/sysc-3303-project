@@ -1,19 +1,46 @@
-package main;
+package main.elevator;
 
 public class ElevatorMotor {
     /* =========================== */
     /* ========== ENUMS ========== */
 
-    public enum MotorMovement {
+    public enum MotorState {
         UP,
         DOWN,
-        STATIONARY
+        STATIONARY;
+        
+        public static MotorState fromOrdinal(int i) {
+            switch(i) {
+            case 0:
+                return UP;
+            case 1:
+                return DOWN;
+            case 2:
+                return STATIONARY;
+            default:
+                return null;
+            }
+        }
+        
+        @Override
+        public String toString() {
+            switch(this) {
+            case UP:
+                return "UP";
+            case DOWN:
+                return "DOWN";
+            case STATIONARY:
+                return "STATIONARY";
+            default:
+                return "<invalid>";
+            }
+        }
     }
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    MotorMovement _moving = MotorMovement.STATIONARY;
+    private MotorState _motorState;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -32,8 +59,8 @@ public class ElevatorMotor {
      *
      * @param movement
      */
-    public void setMotorState(MotorMovement movement) {
-        this._moving = movement;
+    public void setMotorState(MotorState movement) {
+        this._motorState = movement;
     }
 
     /* ============================= */
@@ -44,8 +71,8 @@ public class ElevatorMotor {
      *
      * @return the direction that the motor is moving in
      */
-    public MotorMovement getMovementState() {
-        return this._moving;
+    public MotorState motorState() {
+        return this._motorState;
     }
 
     /* ================================== */
@@ -56,7 +83,7 @@ public class ElevatorMotor {
      * The movement is set to stationary
      */
     public ElevatorMotor() {
-        // Empty stub
+        this._motorState = MotorState.STATIONARY;
     }
 
     /**
@@ -64,8 +91,8 @@ public class ElevatorMotor {
      *
      * @param movement
      */
-    public ElevatorMotor(MotorMovement movement) {
-        this._moving = movement;
+    public ElevatorMotor(MotorState motorState) {
+        this._motorState = motorState;
     }
 
     /* ============================= */

@@ -1,20 +1,24 @@
-package main;
+package main.elevator;
 
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 
-import network.ClientSocket;
-import utils.*;
+import main.Scheduler;
+import network.socket.ClientSocket;
 
-public class Elevator {
+public class ElevatorManager {
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
     private ClientSocket    _schedulerSocket;
-    
+
     private InetAddress     _schedulerIP;
+    
+    private Elevator[]      _elevators;
+    
+    private int             _numFloors;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -23,6 +27,7 @@ public class Elevator {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
+    public static final int NUMBER_OF_ELEVATORS = 1;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -39,7 +44,7 @@ public class Elevator {
      * Constructor that uses localhost as the Scheduler IP
      *
      */
-    public Elevator() {
+    public ElevatorManager() {
         // Initialize the scheduler IP address to the local host
         try {
             _schedulerIP = InetAddress.getLocalHost();
@@ -48,6 +53,8 @@ public class Elevator {
             System.exit(1);
         }
 
+        _elevators = new Elevator[NUMBER_OF_ELEVATORS];
+        
         // Initialize the scheduler socket
         this.initializeSchedulerSocket();
     }
@@ -57,7 +64,7 @@ public class Elevator {
      *
      * @param IPAddress
      */
-    public Elevator(String IPAddress) {
+    public ElevatorManager(String IPAddress) {
         // Initialize the scheduler IP to the passed IP address
         try {
             _schedulerIP = InetAddress.getByName(IPAddress);
@@ -66,6 +73,8 @@ public class Elevator {
             System.exit(1);
         }
 
+        _elevators = new Elevator[NUMBER_OF_ELEVATORS];
+        
         // Initialize the Scheduler socket
         this.initializeSchedulerSocket();
     }
@@ -78,7 +87,7 @@ public class Elevator {
      */
     private void initializeSchedulerSocket() {
         try {
-            _schedulerSocket = new ClientSocket(_schedulerIP, Scheduler.PORT_ELEVATOR);
+            _schedulerSocket = new ClientSocket(this, _schedulerIP, Scheduler.PORT_ELEVATOR);
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
@@ -86,27 +95,8 @@ public class Elevator {
     }
 
     /**
-     * Helper function to log the data of a packet
-     *
-     * @param packet
-     */
-    private void logPacket(DatagramPacket packet) {
-        System.out.println("===== Elevator: Packet Data =====");
-        System.out.println("To host:          " + packet.getAddress());
-        System.out.println("Destination port: " + packet.getPort());
-        System.out.println("Length:           " + packet.getLength());
-        System.out.println("Contains:         " + new String(packet.getData(), 0, packet.getLength()));
-        System.out.print("Byte array:       ");
-        for (int j = 0; j < packet.getLength(); j++) {
-            System.out.print(packet.getData()[j] + " ");
-        }
-
-        System.out.println("");
-    }
-
-    /**
      * The main running loop for Elevator
-     * @throws IOException 
+     * @throws IOException
      *
      */
     public void loop() throws IOException {
@@ -115,19 +105,48 @@ public class Elevator {
         if (!_schedulerSocket.runSetupAndStartThreads()) {
             throw new RuntimeException("Something went wrong setting up socket; Aborting");
         }
-        
-        // Start the main loop
-        while (true) {
-            // Wait for message from floor socket and send it off to the elevator
-            _schedulerSocket.waitForMessage();
-            byte[] message = _schedulerSocket.getMessage();
-            System.out.println(String.format("Entry as bytes: %s", Arrays.toString(message)));
-            
-            FloorInputEntry returnMessage = new FloorInputEntry(message);
-            System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
-                        
-            _schedulerSocket.sendMessage(message);
 
+        // Send the number of elevators to the scheduler
+        _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_ELEVATORS});
+
+        // Wait for scheduler to send off number of floors
+        _numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
+        
+        for (int i=0; i<NUMBER_OF_ELEVATORS; i++) {
+            _elevators[i] = new Elevator(this, _numFloors, i);
+            new Thread(_elevators[i]).start();
+        }
+                
+        // Start the main loop
+        synchronized(this) {
+            while (true) {
+                byte[] message;
+                
+                // Checks the socket for new messages to send to an elevator
+                while(_schedulerSocket.hasMessage()) {
+                    message = _schedulerSocket.getMessage();
+                    if (message != null) {
+                        System.out.println("--------------------------------------");
+                        System.out.println("Recieved new message: " + Arrays.toString(message));
+                        _elevators[0].putMessage(message);
+                    }
+                }
+                
+                // Checks elevators for messages to send to the socket
+                for (Elevator e: _elevators) {
+                    message = e.getMessage();
+                    if (message != null) {
+                        _schedulerSocket.sendMessage(message);
+                    }
+                }
+                
+                try {
+                    // Waits to be notified of a new message
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -135,18 +154,18 @@ public class Elevator {
      * Starts the main loop
      *
      * @param args
-     * @throws IOException 
+     * @throws IOException
      */
     public static void main(String[] args) throws IOException {
 
-        Elevator elevator;
+        ElevatorManager elevator;
 
         // Construct a new Elevator
         if (args.length == 0) {
-            elevator = new Elevator();
+            elevator = new ElevatorManager();
         }
         else {
-            elevator = new Elevator(args[0]);
+            elevator = new ElevatorManager(args[0]);
         }
 
         elevator.loop();
