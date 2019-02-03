@@ -1,4 +1,4 @@
-package main;
+package main.elevator;
 
 public class ElevatorLamp {
     /* ===================================== */
