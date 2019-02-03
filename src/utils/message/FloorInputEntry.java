@@ -57,7 +57,7 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
 
     @Override
     public String toString() {
-        return String.format("Timestamp: %s, Floor: %d, Direction: %s, Car: %d", _timestamp.toString(), _floor, _direction, _destination);
+        return String.format("Timestamp: %s, Floor: %d, Direction: %s, Destination: %d", _timestamp.toString(), _floor, _direction, _destination);
     }
 
     /** Returns the entry as an array of bytes. First 5 bytes are the timestamp, then the next 3 are the floor, direction and destination */

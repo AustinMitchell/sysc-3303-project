@@ -2,7 +2,6 @@ package utils.message;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /** Object for sending to an elevator car to determine which elevator buttons it needs to press */
 public class SchedulerDestinationRequest {
