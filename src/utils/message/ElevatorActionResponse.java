@@ -1,6 +1,6 @@
 package utils.message;
 
-import main.ElevatorMotor;
+import main.elevator.ElevatorMotor;
 
 /** Object for responding to an elevator car's action request. */
 public class ElevatorActionResponse {

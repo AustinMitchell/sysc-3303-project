@@ -2,8 +2,8 @@ package test;
 
 import java.util.Arrays;
 
-import main.Elevator;
-import main.ElevatorMotor;
+import main.elevator.Elevator;
+import main.elevator.ElevatorMotor;
 import utils.message.ElevatorActionResponse;
 import utils.message.ElevatorContinueRequest;
 

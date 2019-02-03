@@ -15,12 +15,12 @@ public class ServerSocket extends Socket {
     /* ========== CONSTRUCTORS ========== */
     
     /** Constructs a socket set up to receive on a specified port. */
-    public ServerSocket(int recvPort) throws SocketException, UnknownHostException {
-        this(recvPort, (byte)1);
+    public ServerSocket(Object observer, int recvPort) throws SocketException, UnknownHostException {
+        this(observer, recvPort, (byte)1);
     }
     /** Constructs a socket set up to receive on a specified port with an ID to send to the client */
-    public ServerSocket(int recvPort, byte id) throws SocketException, UnknownHostException {
-        super(recvPort);
+    public ServerSocket(Object observer, int recvPort, byte id) throws SocketException, UnknownHostException {
+        super(observer, recvPort);
         _id = id;
     }
 

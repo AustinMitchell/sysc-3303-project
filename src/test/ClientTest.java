@@ -2,12 +2,12 @@ package test;
 
 import java.util.Scanner;
 
-import network.*;
 import network.socket.ClientSocket;
 
 public class ClientTest {
     public static void main(String[] args) throws Exception {
-        ClientSocket socket = new ClientSocket("localhost", 3000);
+        Object observer = new Object();
+        ClientSocket socket = new ClientSocket(observer, "localhost", 3000);
 
         System.out.println("Establishing connection...");
         socket.runSetupAndStartThreads();

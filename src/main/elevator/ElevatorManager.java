@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 import main.Scheduler;
 import network.socket.ClientSocket;
-import utils.message.FloorInputEntry;
 
 public class ElevatorManager {
 
@@ -111,18 +110,40 @@ public class ElevatorManager {
         _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_ELEVATORS});
 
         // Wait for scheduler to send off number of floors
-        _numFloors = _schedulerSocket.getMessageWhenEmpty()[0];
+        _numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
         
         for (int i=0; i<NUMBER_OF_ELEVATORS; i++) {
             _elevators[i] = new Elevator(this, _numFloors, i);
+            new Thread(_elevators[i]).start();
         }
-        
-        
-        System.out.println(_numFloors);
+                
         // Start the main loop
-//        while (true) {
-//            
-//        }
+        synchronized(this) {
+            while (true) {
+                byte[] message;
+                try {
+                    // Waits to be notified of a new message
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                
+                // Checks the socket for new messages to send to an elevator
+                message = _schedulerSocket.getMessage();
+                if (message != null) {
+                    System.out.println("Recieved new message: " + Arrays.toString(message));
+                    _elevators[0].putMessage(message);
+                }
+                
+                // Checks elevators for messages to send to the socket
+                for (Elevator e: _elevators) {
+                    message = e.getMessage();
+                    if (message != null) {
+                        _schedulerSocket.sendMessage(message);
+                    }
+                }
+            }
+        }
     }
 
     /**

@@ -50,7 +50,7 @@ public class Floor {
      * @throws SocketException
      */
     public Floor() throws UnknownHostException, SocketException{
-        _schedulerSocket = new ClientSocket("localhost", Scheduler.PORT_FLOOR);
+        _schedulerSocket = new ClientSocket(this, "localhost", Scheduler.PORT_FLOOR);
     }
 
     /* ============================= */
