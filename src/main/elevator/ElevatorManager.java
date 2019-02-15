@@ -11,7 +11,7 @@ public class ElevatorManager {
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
-
+	
     private ClientSocket    _schedulerSocket;
 
     private InetAddress     _schedulerIP;
@@ -27,7 +27,7 @@ public class ElevatorManager {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-    public static final int NUMBER_OF_ELEVATORS = 1;
+    public static final int NUMBER_OF_ELEVATORS = 3;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -128,7 +128,9 @@ public class ElevatorManager {
                     if (message != null) {
                         System.out.println("--------------------------------------");
                         System.out.println("Recieved new message: " + Arrays.toString(message));
-                        _elevators[0].putMessage(message);
+                        System.out.println("Target elevator:      " + message[1]);
+
+                        _elevators[message[1]].putMessage(message);
                     }
                 }
 
