@@ -202,12 +202,15 @@ public class Scheduler {
                     }
                 }
 
-
-                System.out.println(String.format("Elevator 0 position:      %d", _currentFloor[0]));
-                System.out.println(String.format("Elevator 0 target:        %s", (_targetFloor[0] == -1) ? "(none)" : _targetFloor[0]));
-                System.out.println(String.format("Elevator 0 motor:         %s", _currentMotorState[0]));
-                System.out.println(String.format("Elevator 0 floor entry:   %s", _targetFloorEntry[0]));
-                System.out.println("---------------------------");
+                System.out.println("/////////////////////////////////////////////");
+                System.out.println("/////////////////////////////////////////////");
+                for (int i=0; i<_numberOfElevators; i++) {
+	                System.out.println(String.format("Elevator %d position:      %d", i, _currentFloor[i]));
+	                System.out.println(String.format("Elevator %d target:        %s", i, (_targetFloor[i] == -1) ? "(none)" : _targetFloor[i]));
+	                System.out.println(String.format("Elevator %d motor:         %s", i, _currentMotorState[i]));
+	                System.out.println(String.format("Elevator %d floor entry:   %s", i, _targetFloorEntry[i]));
+	                System.out.println("---------------------------");
+                }
 
                 try {
                     wait();
