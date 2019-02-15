@@ -27,7 +27,7 @@ public class FloorInputEntryTest {
         assertEquals(direction, entry1.direction());
         assertEquals(destination, entry1.destination());
 
-        assertEquals(String.format("Timestamp: %s, Floor: %d, Direction: %s, Car: %d", timeStamp.toString(), floor, direction.toString(), destination), entry1.toString());
+        assertEquals(String.format("Timestamp: %s, Floor: %d, Direction: %s, Destination: %d", timeStamp.toString(), floor, direction.toString(), destination), entry1.toString());
 
         assertEquals(14, entry1.toBytes()[1]);
         assertEquals(10, entry1.toBytes()[2]);
