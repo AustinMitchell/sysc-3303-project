@@ -2,6 +2,7 @@ package main;
 
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,20 +43,15 @@ public class Scheduler {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private ServerSocket                _floorSocket;
-    private ServerSocket                _elevatorSocket;
+    private ServerSocket            _floorSocket;
+    private ServerSocket            _elevatorSocket;
 
-    private int                         _numberOfFloors;
-    private int                         _numberOfElevators;
+    private int                     _numberOfFloors;
+    private int                     _numberOfElevators;
 
-    private List<FloorInputEntry>       _floorEntries;
+    private List<FloorInputEntry>   _floorEntries;
 
-    private boolean[]                   _elevatorIdle;
-    private int[]                       _currentFloor;
-    //private TreeSet<Integer>[]          _targetFloor;
-    private int[]                       _targetFloor;
-    private FloorInputEntry[]           _targetFloorEntry;
-    private ElevatorMotor.MotorState[]  _currentMotorState;
+    private ElevatorSchedule[]      _elevatorSchedule;
 
 
     /* ======================================= */
@@ -147,19 +143,10 @@ public class Scheduler {
         System.out.println("Sending number of floors to elevator");
         _elevatorSocket.sendMessage(new byte[] {(byte)_numberOfFloors});
 
-        _elevatorIdle       = new boolean[_numberOfElevators];
-        _currentFloor       = new int[_numberOfElevators];
-        //_targetFloor        = (TreeSet<Integer>[])new TreeSet[_numberOfElevators];
-        _targetFloor        = new int[_numberOfElevators];
-        _targetFloorEntry   = new FloorInputEntry[_numberOfElevators];
-        _currentMotorState  = new ElevatorMotor.MotorState[_numberOfElevators];
+        _elevatorSchedule = new ElevatorSchedule[_numberOfElevators];
 
         for (int i=0; i<_numberOfElevators; i++) {
-            _elevatorIdle[i]        = true;
-            _currentFloor[i]        = 0;
-            _targetFloor[i]         = -1;
-            _targetFloorEntry[i]    = null;
-            _currentMotorState[i]   = ElevatorMotor.MotorState.STATIONARY;
+            _elevatorSchedule[i] = new ElevatorSchedule();
         }
 
         synchronized(this) {
@@ -205,11 +192,11 @@ public class Scheduler {
                 System.out.println("/////////////////////////////////////////////");
                 System.out.println("/////////////////////////////////////////////");
                 for (int i=0; i<_numberOfElevators; i++) {
-	                System.out.println(String.format("Elevator %d position:      %d", i, _currentFloor[i]));
-	                System.out.println(String.format("Elevator %d target:        %s", i, (_targetFloor[i] == -1) ? "(none)" : _targetFloor[i]));
-	                System.out.println(String.format("Elevator %d motor:         %s", i, _currentMotorState[i]));
-	                System.out.println(String.format("Elevator %d floor entry:   %s", i, _targetFloorEntry[i]));
-	                System.out.println("---------------------------");
+                    System.out.println(String.format("Elevator %d position:             %d", i, _elevatorSchedule[i].currentFloor()));
+                    System.out.println(String.format("Elevator %d target:               %s", i, (_elevatorSchedule[i].currentTarget().target() == -1) ? "(none)" : _elevatorSchedule[i].currentTarget().target()));
+                    System.out.println(String.format("Elevator %d motor:                %s", i, _elevatorSchedule[i].currentDirection()));
+                    System.out.println(String.format("Elevator %d next button presses:  %s", i, Arrays.toString(_elevatorSchedule[i].currentTarget().buttonPresses().toArray(null))));
+                    System.out.println("---------------------------");
                 }
 
                 try {
@@ -223,105 +210,99 @@ public class Scheduler {
     }
 
     private void handleFloorInputEntry(FloorInputEntry newEntry) {
+        int leastCost       = -1;
+        int bestElevator    = -1;
+        
+        // calculate the cost each elevator would take to meet a request. cost == -1 means it rejected the request.
         for(int i=0; i<_numberOfElevators; i++) {
-            if (_elevatorIdle[i]) {
-                // Set up next elevator destination
-                System.out.println("> Assigning new entry from floor");
-                assignNewEntry(i, newEntry);
-                // Send a message to startup the elevator
-                System.out.println("    Sending new ElevatorActionResponse");
-                _elevatorSocket.sendMessage(new ElevatorActionResponse(i, true, _currentMotorState[i]).toBytes());
-                return;
+            int cost = _elevatorSchedule[i].cost(newEntry);
+            if (cost != -1 && (bestElevator == -1 || cost < leastCost)) {
+                leastCost       = cost;
+                bestElevator    = i;
             }
         }
 
-        // If we got down here, then no elevators were free. Just stick it in the queue.
-        System.out.println("> Putting input into the queue");
-        _floorEntries.add(newEntry);
+        if (bestElevator == -1) {
+            // If we got down here, then all elevators rejected the request. Place into the queue.
+            System.out.println("> Floor request was rejected by all elevators; Placing into queue");
+            _floorEntries.add(newEntry);
+            
+        } else {
+            System.out.println(String.format(" > Floor request was accepted by elevator %d at a cost of %d", bestElevator, leastCost));
+            
+            // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait for the elevator to ask for work
+            if (_elevatorSchedule[bestElevator].currentDirection() == ElevatorMotor.MotorState.STATIONARY) {
+                System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d", bestElevator));
+                _elevatorSocket.sendMessage(new ElevatorActionResponse(bestElevator, true, ElevatorMotor.MotorState.STATIONARY).toBytes());
+            }
+            
+            // Finally modify our internal tracking
+            _elevatorSchedule[bestElevator].addFloorEntry(newEntry);
+        }
     }
 
     private void handleElevatorActionRequest(ElevatorActionRequest request) {
         int id = request.carID();
 
-        if (_targetFloor[id] != -1) {
-            System.out.println("> Going to destination");
-            _targetFloorEntry[id]   = null;
-            _elevatorIdle[id]       = false;
-            _targetFloorEntry[id]   = null;
-            _currentMotorState[id]  = (_targetFloor[id] > _currentFloor[id]) ? ElevatorMotor.MotorState.UP : ElevatorMotor.MotorState.DOWN;
-        } else if (_floorEntries.isEmpty()) {
-            // Disengage elevator
-            System.out.println("> Disengaging elevator");
-            _elevatorIdle[id]       = true;
-            _targetFloorEntry[id]   = null;
-            _currentMotorState[id]  = ElevatorMotor.MotorState.STATIONARY;
-        } else {
-            // Set up next elevator destination
-            System.out.println("> Assigning new entry from queue");
-            FloorInputEntry newEntry =  _floorEntries.remove(0);
-            assignNewEntry(id, newEntry);
+        // Poll what the current schedule says we should do
+        switch(_elevatorSchedule[id].currentDirection()) {
+        case UP:
+            System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d to go UP", id));
+            _elevatorSocket.sendMessage(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.UP).toBytes());
+            break;
+        case DOWN:
+            System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d to go DOWN", id));
+            _elevatorSocket.sendMessage(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.DOWN).toBytes());
+            break;
+        case STATIONARY:
+            System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d to disengage", id));
+            _elevatorSocket.sendMessage(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.STATIONARY).toBytes());
+            break;
         }
-
-        // Send a response to the elevator with direction it will need to go
-        System.out.println("    Sending new ElevatorActionResponse");
-        _elevatorSocket.sendMessage(new ElevatorActionResponse(id, !_elevatorIdle[id], _currentMotorState[id]).toBytes());
     }
 
     private void handleElevatorContinueRequest(ElevatorContinueRequest request) {
         int id = request.carID();
-        int response;
+        int currentFloor = _elevatorSchedule[id].currentFloor();
 
-        _currentMotorState[id] = request.actionTaken();
 
         // If motor is engaged, change floor
-        if (_currentMotorState[id] == ElevatorMotor.MotorState.UP) {
-            _currentFloor[id] += 1;
-        } else if (_currentMotorState[id] == ElevatorMotor.MotorState.DOWN) {
-            _currentFloor[id] -= 1;
+        if (request.actionTaken() == ElevatorMotor.MotorState.UP) {
+            _elevatorSchedule[id].setCurrentFloor(currentFloor+1);
+        } else if (request.actionTaken() == ElevatorMotor.MotorState.DOWN) {
+            _elevatorSchedule[id].setCurrentFloor(currentFloor-1);
         }
 
-        if (_currentFloor[id] == _targetFloor[id]) {
-            _targetFloor[id] = -1;
-            response = _currentFloor[id];
-        } else {
-            response = -1;
-        }
-
-        // Send the response
-        System.out.println("    Sending new ElevatorContinueResponse");
-        _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, response).toBytes());
-
-        // If response is not continue, then also send along the user's destination
-        if (response != -1) {
+        
+        if (_elevatorSchedule[id].currentFloor() == _elevatorSchedule[id].currentTarget().target()) {
+            // Elevator met its target, so it needs to stop
+            // TODO: Call some function to resolve current schedule and extract new stops
+            FloorStop target = null;
+            
+            System.out.println(String.format(" > Sending new ElevatorContinueResponse to elevator %d for it to stop", id));
+            _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, _elevatorSchedule[id].currentFloor()).toBytes());
+            
             SchedulerDestinationRequest newRequest = new SchedulerDestinationRequest(id);
-            if (_targetFloorEntry[id] != null) {
-                // If we have an entry, add a destination
-                System.out.println("> Sending over button input");
-                newRequest.addFloor(_targetFloorEntry[id].destination());
-            }
-            System.out.println("    Sending new SchedulerDestinationRequest");
+            for (int button: target.buttonPresses()) {
+                // Add all the requested buttons to the request
+                newRequest.addFloor(button);
+            }            
+            
+            System.out.println(String.format(" > Sending new SchedulerDestinationRequest to elevator %d with following floors: %s", id, newRequest.destinationsAsArray()));
             _elevatorSocket.sendMessage(newRequest.toBytes());
+            
+        } else {
+            // Elevator has not met its target, so it should continue.
+            System.out.println(String.format(" > Sending new ElevatorContinueResponse to elevator %d for it to continue", id));
+            _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, -1).toBytes());
+            
         }
     }
 
     private void handleElevatorButtonPushEvent(ElevatorButtonPushEvent event) {
         int id = event.carID();
 
-        _targetFloor[id]        = _targetFloorEntry[id].destination();
-        _targetFloorEntry[id]   = null;
-    }
-
-    private void assignNewEntry(int carID, FloorInputEntry entry) {
-        _targetFloor[carID]         = entry.floor();
-        _elevatorIdle[carID]        = false;
-        _targetFloorEntry[carID]    = entry;
-        if (entry.floor() > _currentFloor[carID]) {
-            _currentMotorState[carID] = ElevatorMotor.MotorState.UP;
-        } else if (entry.floor() < _currentFloor[carID]) {
-            _currentMotorState[carID] = ElevatorMotor.MotorState.DOWN;
-        } else {
-            _currentMotorState[carID] = ElevatorMotor.MotorState.STATIONARY;
-        }
+        //TODO: Code to add all button pushes to elevator schedule
     }
 
     public static void main(String[] args) throws SocketException, UnknownHostException  {

@@ -3,6 +3,7 @@ package main;
 import java.util.*;
 
 import main.elevator.ElevatorMotor.MotorState;
+import utils.message.FloorInputEntry;
 
 public class ElevatorSchedule {
     @SuppressWarnings("serial")
@@ -41,6 +42,10 @@ public class ElevatorSchedule {
     /* ============================= */
     /* ========== SETTERS ========== */
 
+    public void setCurrentFloor(int floor) {
+        _currentFloor = floor;
+    }
+    
     /* ============================= */
     /* ========== GETTERS ========== */
 
@@ -91,4 +96,10 @@ public class ElevatorSchedule {
             }
         }
     }
+    
+    public void addFloorEntry(FloorInputEntry newEntry) {
+        
+    }
+    
+    public int cost(FloorInputEntry newEntry) { return 0; }
 }

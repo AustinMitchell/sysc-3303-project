@@ -1,18 +1,19 @@
 package utils.message;
 
+import main.elevator.ElevatorMotor;
+
 public enum Direction {
     UP,
     DOWN;
     
-    @Override
-    public String toString() {
-        switch(ordinal()) {
-        case 0:
-            return "UP";
-        case 1:
-            return "DOWN";
+    public ElevatorMotor.MotorState toMotorState() {
+        switch(this) {
+        case UP:
+            return ElevatorMotor.MotorState.UP;
+        case DOWN:
+            return ElevatorMotor.MotorState.DOWN;
         default:
-            return "<invalid>";
+            return null;
         }
     }
     
