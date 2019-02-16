@@ -199,7 +199,7 @@ public class Scheduler {
                         default:
                             break;
                         }
-                    }    
+                    }
                 }
 
                 System.out.println("/////////////////////////////////////////////");
@@ -287,7 +287,7 @@ public class Scheduler {
             response = -1;
         }
 
-        // Send the response 
+        // Send the response
         System.out.println("    Sending new ElevatorContinueResponse");
         _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, response).toBytes());
 
@@ -298,7 +298,7 @@ public class Scheduler {
                 // If we have an entry, add a destination
                 System.out.println("> Sending over button input");
                 newRequest.addFloor(_targetFloorEntry[id].destination());
-            } 
+            }
             System.out.println("    Sending new SchedulerDestinationRequest");
             _elevatorSocket.sendMessage(newRequest.toBytes());
         }
@@ -310,7 +310,7 @@ public class Scheduler {
         _targetFloor[id]        = _targetFloorEntry[id].destination();
         _targetFloorEntry[id]   = null;
     }
-    
+
     private void assignNewEntry(int carID, FloorInputEntry entry) {
         _targetFloor[carID]         = entry.floor();
         _elevatorIdle[carID]        = false;

@@ -23,12 +23,12 @@ public class ElevatorActionResponseTest {
         assertEquals((byte)carID, request1.carID());
         assertEquals(messageTestType.ordinal(), request1.toBytes()[0]);
         assertEquals((byte)carID, request1.toBytes()[1]);
-        assertEquals((byte)motorMovement.ordinal(), request1.toBytes()[2]);
+        assertEquals((byte)motorMovement.ordinal(), request1.toBytes()[3]);
 
         assertEquals((byte)carID, request2.carID());
         assertEquals(messageTestType.ordinal(), request2.toBytes()[0]);
         assertEquals((byte)carID, request2.toBytes()[1]);
-        assertEquals((byte)motorMovement.ordinal(), request2.toBytes()[2]);
+        assertEquals((byte)motorMovement.ordinal(), request2.toBytes()[3]);
     }
 
 }
