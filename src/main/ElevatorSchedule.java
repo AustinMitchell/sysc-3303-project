@@ -108,11 +108,7 @@ public class ElevatorSchedule {
                         this._nextDirection = MotorState.STATIONARY;
                     }
                     else {
-                        if (this._nextTargets.get(0).target() < this._currentFloor) {
-                            this._currentDirection = MotorState.DOWN;
-                        } else {
-                            this._currentDirection = MotorState.UP;
-                        }
+                        this._currentDirection = this._nextDirection;
                     }
 
                     return this._currentTarget.buttonPresses();
