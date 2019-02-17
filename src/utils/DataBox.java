@@ -4,6 +4,7 @@ package utils;
 public class DataBox<T> extends DataQueueBox<T> {
 
     /** Puts an item into the queue. */
+    @Override
     public synchronized boolean put(T data) {
             if (!_dataQueue.isEmpty()) {
                 return false;
@@ -14,6 +15,7 @@ public class DataBox<T> extends DataQueueBox<T> {
     }
     
     /** Waits for the queue to be empty, then puts an item into it. */
+    @Override
     public synchronized boolean putWhenEmpty(T data) {
         while(!_dataQueue.isEmpty()) {
             try {
@@ -22,6 +24,7 @@ public class DataBox<T> extends DataQueueBox<T> {
                 return false;
             }
         }
+        this.notifyAll();
         return put(data);
     }
 }

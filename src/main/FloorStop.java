@@ -103,4 +103,20 @@ public class FloorStop {
     public void addButtonPress(int buttonPress) {
         this._buttonPresses.add(buttonPress);
     }
+    
+    @Override
+    public String toString() {
+        if (_buttonPresses.isEmpty()) {
+            return _target + ": ()";
+        }
+        
+        StringBuilder result = new StringBuilder();
+        result.append(_target + ": (");
+        for (Integer i: _buttonPresses) {
+            result.append(i + ", ");
+        }
+        result.delete(result.length()-2, result.length());
+        result.append(")");
+        return result.toString();
+    }
 }

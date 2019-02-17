@@ -47,7 +47,7 @@ public class ElevatorSchedule {
     public void setCurrentFloor(int floor) {
         _currentFloor = floor;
     }
-    
+
     /* ============================= */
     /* ========== GETTERS ========== */
 
@@ -108,11 +108,7 @@ public class ElevatorSchedule {
                         this._nextDirection = MotorState.STATIONARY;
                     }
                     else {
-                        if (this._nextTargets.get(0).target() < this._currentFloor) {
-                            this._currentDirection = MotorState.DOWN;
-                        } else {
-                            this._currentDirection = MotorState.UP;
-                        }
+                        this._currentDirection = this._nextDirection;
                     }
 
                     return this._currentTarget.buttonPresses();
@@ -165,8 +161,32 @@ public class ElevatorSchedule {
      * @return number of floors needed to travel, or -1 if not possible
      */
     public int cost(FloorInputEntry entry) {
+        if (this._currentDirection == MotorState.STATIONARY) {
+            // idle state
+            return Math.abs(this._currentFloor - entry.floor());
 
-        return -1;
+        } else if (this._nextDirection == MotorState.STATIONARY) {
+            // Heading to a final stop
+            return Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+
+        } else if (this._currentDirection == this._nextDirection) {
+            // Going to a request who has the same direction
+            if ((this._currentDirection == MotorState.UP && entry.floor() < this._currentFloor)
+                    || (this._currentDirection == MotorState.DOWN && entry.floor() > this._currentFloor)
+                    || (entry.direction().toMotorState() != this._currentDirection)) {
+                // Reject if you're past the request, or if it's in the opposite direction
+                return -1;
+            }
+            return Math.abs(this._currentFloor - entry.floor());
+
+        } else {
+            // Going to a request who has the opposite direction
+            if (entry.direction().toMotorState() != this._currentDirection) {
+                // Reject if it's in the opposite direction
+                return -1;
+            }
+            return Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+        }
     }
 
     /**
@@ -175,7 +195,7 @@ public class ElevatorSchedule {
      * @param newTarget
      */
     private void addTarget(FloorStop newTarget) {
-        if (this._currentDirection == MotorState.STATIONARY) {
+        if (this._currentDirection == MotorState.STATIONARY || this._currentTarget == null) {
             // No current target, make current target the new target and change direction accordingly
             this._currentTarget = newTarget;
             if (newTarget.target() < this._currentFloor) {
@@ -190,11 +210,12 @@ public class ElevatorSchedule {
             // There is already a current target, add to the list of next targets in correct position
 
             // Check if the current target matches the new target
-            if (newTarget.target() == this._currentTarget.target()) {
+            if (newTarget.target() == 
+                    this._currentTarget.target()) {
                 mergeButtonPresses(newTarget, this._currentTarget);
             }
             else {
-             // Check if there is already a stop at specified floor
+                // Check if there is already a stop at specified floor
                 int stopExists = checkStopExists(newTarget);
                 if (stopExists != -1) {
                     mergeButtonPresses(newTarget, this._nextTargets.get(stopExists));
@@ -203,14 +224,14 @@ public class ElevatorSchedule {
 
                     // Determine if we need to swap the current target and new target
                     if (this._nextDirection == MotorState.UP &&
-                        this._currentTarget.target() < newTarget.target()) {
+                            this._currentTarget.target() < newTarget.target()) {
 
                         this._nextTargets.add(0, this._currentTarget);
                         this._currentTarget = newTarget;
 
                     }
                     else if (this._nextDirection == MotorState.DOWN &&
-                             this._currentTarget.target() > newTarget.target()) {
+                            this._currentTarget.target() > newTarget.target()) {
                         this._nextTargets.add(0, this._currentTarget);
                         this._currentTarget = newTarget;
                     }
@@ -235,7 +256,7 @@ public class ElevatorSchedule {
     private int checkStopExists(FloorStop target) {
         for (int i = 0; i < this._nextTargets.size(); i++) {
             if (target.target() == this._nextTargets.get(i).target() &&
-                target.direction() == this._nextTargets.get(i).direction()) {
+                    target.direction() == this._nextTargets.get(i).direction()) {
                 return i;
             }
         }
@@ -252,5 +273,20 @@ public class ElevatorSchedule {
         for (int i = 0; i < target.buttonPresses().size(); i++) {
             existingTarget.addButtonPress(target.buttonPresses().get(i));
         }
+    }
+    
+    public String targetListAsString() {
+        if (_nextTargets.isEmpty()) {
+            return "[]";
+        }
+        
+        StringBuilder result = new StringBuilder();
+        result.append("[");
+        for (FloorStop stop: _nextTargets) {
+            result.append(stop.toString() + ", ");
+        }
+        result.delete(result.length()-2, result.length());
+        result.append("]");
+        return result.toString();
     }
 }

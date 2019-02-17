@@ -126,9 +126,9 @@ public class ElevatorManager {
                 while(_schedulerSocket.hasMessage()) {
                     message = _schedulerSocket.getMessage();
                     if (message != null) {
-                        System.out.println("--------------------------------------");
-                        System.out.println("Recieved new message: " + Arrays.toString(message));
-                        System.out.println("Target elevator:      " + message[1]);
+//                        System.out.println("--------------------------------------");
+//                        System.out.println("ELEVATOR MANAGER Recieved new message: " + Arrays.toString(message));
+//                        System.out.println("ELEVATOR MANAGER Target elevator:      " + message[1]);
 
                         _elevators[message[1]].putMessage(message);
                     }
