@@ -280,15 +280,16 @@ public class ElevatorSchedule {
     }
     
     public String targetListAsString() {
+        if (_nextTargets.isEmpty()) {
+            return "[]";
+        }
+        
         StringBuilder result = new StringBuilder();
         result.append("[");
         for (FloorStop stop: _nextTargets) {
-            result.append(stop.target() + ": (");
-            for (Integer i: stop.buttonPresses()) {
-                result.append(i + ", ");
-            }
-            result.append("), ");
+            result.append(stop.toString() + ", ");
         }
+        result.delete(result.length()-2, result.length());
         result.append("]");
         return result.toString();
     }

@@ -203,7 +203,7 @@ public class Scheduler {
                 System.out.println("---------------------------");
                 for (int i=0; i<_numberOfElevators; i++) {
                     System.out.println(String.format("Elevator %d position:         %d", i, _elevatorSchedule[i].currentFloor()));
-                    System.out.println(String.format("Elevator %d target:           %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : _elevatorSchedule[i].currentTarget().target()));
+                    System.out.println(String.format("Elevator %d target:           %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : _elevatorSchedule[i].currentTarget()));
                     System.out.println(String.format("Elevator %d motor:            %s", i, _elevatorSchedule[i].currentDirection()));
                     System.out.println(String.format("Elevator %d target sequence:  %s", i, _elevatorSchedule[i].targetListAsString()));
                     System.out.println("---------------------------");
