@@ -44,6 +44,10 @@ public class ElevatorSchedule {
     /* ============================= */
     /* ========== SETTERS ========== */
 
+    public void setCurrentFloor(int floor) {
+        _currentFloor = floor;
+    }
+    
     /* ============================= */
     /* ========== GETTERS ========== */
 

@@ -37,7 +37,7 @@ public class SchedulerDestinationRequest {
         }
     }
     
-    private byte[] destinationsAsArray() {
+    public byte[] destinationsAsArray() {
         byte[] listAsArray = new byte[_destinationFloors.size()];
         for(int i=0; i<listAsArray.length; i++) {
             listAsArray[i] = _destinationFloors.get(i);
