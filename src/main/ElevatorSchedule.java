@@ -278,4 +278,18 @@ public class ElevatorSchedule {
             existingTarget.addButtonPress(target.buttonPresses().get(i));
         }
     }
+    
+    public String targetListAsString() {
+        StringBuilder result = new StringBuilder();
+        result.append("[");
+        for (FloorStop stop: _nextTargets) {
+            result.append(stop.target() + ": (");
+            for (Integer i: stop.buttonPresses()) {
+                result.append(i + ", ");
+            }
+            result.append("), ");
+        }
+        result.append("]");
+        return result.toString();
+    }
 }

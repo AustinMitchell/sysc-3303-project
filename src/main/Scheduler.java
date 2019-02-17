@@ -164,7 +164,7 @@ public class Scheduler {
 
                         switch(MessageType.fromOrdinal(message[0])) {
                         case FLOOR_INPUT_ENTRY:
-                            System.out.println("    Recieved new FloorInputEntry");
+                            System.out.println(" > Recieved new FloorInputEntry");
                             handleFloorInputEntry(new FloorInputEntry(message));
                             break;
 
@@ -202,10 +202,10 @@ public class Scheduler {
 
                 System.out.println("---------------------------");
                 for (int i=0; i<_numberOfElevators; i++) {
-                    System.out.println(String.format("Elevator %d position:             %d", i, _elevatorSchedule[i].currentFloor()));
-                    System.out.println(String.format("Elevator %d target:               %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : _elevatorSchedule[i].currentTarget().target()));
-                    System.out.println(String.format("Elevator %d motor:                %s", i, _elevatorSchedule[i].currentDirection()));
-                    System.out.println(String.format("Elevator %d next button presses:  %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : Arrays.toString(_elevatorSchedule[i].currentTarget().buttonPresses().toArray(new Integer[0]))));
+                    System.out.println(String.format("Elevator %d position:         %d", i, _elevatorSchedule[i].currentFloor()));
+                    System.out.println(String.format("Elevator %d target:           %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : _elevatorSchedule[i].currentTarget().target()));
+                    System.out.println(String.format("Elevator %d motor:            %s", i, _elevatorSchedule[i].currentDirection()));
+                    System.out.println(String.format("Elevator %d target sequence:  %s", i, _elevatorSchedule[i].targetListAsString()));
                     System.out.println("---------------------------");
                 }
 
@@ -223,6 +223,8 @@ public class Scheduler {
         int leastCost       = -1;
         int bestElevator    = -1;
 
+        System.out.println(String.format(" > New entry data: %s", newEntry));
+        
         // calculate the cost each elevator would take to meet a request. cost == -1 means it rejected the request.
         for(int i=0; i<_numberOfElevators; i++) {
             int cost = _elevatorSchedule[i].cost(newEntry);
