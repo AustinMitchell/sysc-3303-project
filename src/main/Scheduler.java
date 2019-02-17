@@ -152,7 +152,12 @@ public class Scheduler {
         synchronized(this) {
             byte[] message;
             while(_floorSocket.isConnected() && _elevatorSocket.isConnected()) {
-
+                
+                System.out.println("");
+                System.out.println("================================================");
+                System.out.println("================================================");
+                System.out.println("");
+                
                 while (_floorSocket.hasMessage()) {
                     message = _floorSocket.getMessage();
                     if (message != null) {
@@ -168,24 +173,24 @@ public class Scheduler {
                         }
                     }
                 }
-
+                
                 while (_elevatorSocket.hasMessage()) {
                     message = _elevatorSocket.getMessage();
                     if (message != null) {
 
                         switch(MessageType.fromOrdinal(message[0])) {
                         case ELEVATOR_ACTION_REQUEST:
-                            System.out.println("    Recieved new ElevatorActionRequest");
+                            System.out.println(String.format(" > Recieved new ElevatorActionRequest from elevator %d", message[1]));
                             handleElevatorActionRequest(new ElevatorActionRequest(message));
                             break;
 
                         case ELEVATOR_CONTINUE_REQUEST:
-                            System.out.println("    Recieved new ElevatorContinueRequest");
+                            System.out.println(String.format(" > Recieved new ElevatorContinueRequest from elevator %d", message[1]));
                             handleElevatorContinueRequest(new ElevatorContinueRequest(message));
                             break;
 
                         case ELEVATOR_BUTTON_PUSH_EVENT:
-                            System.out.println("    Recieved new ElevatorButtonPushEvent");
+                            System.out.println(String.format(" > Recieved new ElevatorButtonPushEvent from elevator %d", message[1]));
                             handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
                             break;
 
@@ -195,13 +200,12 @@ public class Scheduler {
                     }
                 }
 
-                System.out.println("/////////////////////////////////////////////");
-                System.out.println("/////////////////////////////////////////////");
+                System.out.println("---------------------------");
                 for (int i=0; i<_numberOfElevators; i++) {
                     System.out.println(String.format("Elevator %d position:             %d", i, _elevatorSchedule[i].currentFloor()));
-                    System.out.println(String.format("Elevator %d target:               %s", i, (_elevatorSchedule[i].currentTarget().target() == -1) ? "(none)" : _elevatorSchedule[i].currentTarget().target()));
+                    System.out.println(String.format("Elevator %d target:               %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : _elevatorSchedule[i].currentTarget().target()));
                     System.out.println(String.format("Elevator %d motor:                %s", i, _elevatorSchedule[i].currentDirection()));
-                    System.out.println(String.format("Elevator %d next button presses:  %s", i, Arrays.toString(_elevatorSchedule[i].currentTarget().buttonPresses().toArray(null))));
+                    System.out.println(String.format("Elevator %d next button presses:  %s", i, (_elevatorSchedule[i].currentTarget() == null) ? "(none)" : Arrays.toString(_elevatorSchedule[i].currentTarget().buttonPresses().toArray(new Integer[0]))));
                     System.out.println("---------------------------");
                 }
 
@@ -238,12 +242,14 @@ public class Scheduler {
 
             // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait for the elevator to ask for work
             if (_elevatorSchedule[bestElevator].currentDirection() == ElevatorMotor.MotorState.STATIONARY) {
+                _elevatorSchedule[bestElevator].addFloorEntry(newEntry);
                 System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d", bestElevator));
-                _elevatorSocket.sendMessage(new ElevatorActionResponse(bestElevator, true, ElevatorMotor.MotorState.STATIONARY).toBytes());
+                _elevatorSocket.sendMessage(new ElevatorActionResponse(bestElevator, true, _elevatorSchedule[bestElevator].currentDirection()).toBytes());
+            } else {
+                _elevatorSchedule[bestElevator].addFloorEntry(newEntry);
             }
 
-            // Finally modify our internal tracking
-            _elevatorSchedule[bestElevator].addFloorEntry(newEntry);
+            
         }
     }
 

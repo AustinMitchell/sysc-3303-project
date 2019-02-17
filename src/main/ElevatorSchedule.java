@@ -199,7 +199,7 @@ public class ElevatorSchedule {
      * @param newTarget
      */
     private void addTarget(FloorStop newTarget) {
-        if (this._currentDirection == MotorState.STATIONARY) {
+        if (this._currentDirection == MotorState.STATIONARY || this._currentTarget == null) {
             // No current target, make current target the new target and change direction accordingly
             this._currentTarget = newTarget;
             if (newTarget.target() < this._currentFloor) {
@@ -214,7 +214,8 @@ public class ElevatorSchedule {
             // There is already a current target, add to the list of next targets in correct position
 
             // Check if the current target matches the new target
-            if (newTarget.target() == this._currentTarget.target()) {
+            if (newTarget.target() == 
+                    this._currentTarget.target()) {
                 mergeButtonPresses(newTarget, this._currentTarget);
             }
             else {
