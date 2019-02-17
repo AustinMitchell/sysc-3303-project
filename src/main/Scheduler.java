@@ -160,8 +160,10 @@ public class Scheduler {
                 
                 while (_floorSocket.hasMessage()) {
                     message = _floorSocket.getMessage();
+                    
                     if (message != null) {
-
+                        System.out.println(String.format(" > Message bytes: %s", Arrays.toString(message)));
+                        
                         switch(MessageType.fromOrdinal(message[0])) {
                         case FLOOR_INPUT_ENTRY:
                             System.out.println(" > Recieved new FloorInputEntry");
@@ -176,8 +178,10 @@ public class Scheduler {
                 
                 while (_elevatorSocket.hasMessage()) {
                     message = _elevatorSocket.getMessage();
+                    
                     if (message != null) {
-
+                        System.out.println(String.format(" > Message bytes: %s", Arrays.toString(message)));
+                        
                         switch(MessageType.fromOrdinal(message[0])) {
                         case ELEVATOR_ACTION_REQUEST:
                             System.out.println(String.format(" > Recieved new ElevatorActionRequest from elevator %d", message[1]));
