@@ -256,7 +256,7 @@ public class Scheduler {
             break;
         case STATIONARY:
             System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d to disengage", id));
-            _elevatorSocket.sendMessage(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.STATIONARY).toBytes());
+            _elevatorSocket.sendMessage(new ElevatorActionResponse(id, false, ElevatorMotor.MotorState.STATIONARY).toBytes());
             break;
         }
     }
