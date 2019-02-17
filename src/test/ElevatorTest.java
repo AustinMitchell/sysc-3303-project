@@ -14,9 +14,8 @@ public class ElevatorTest {
         
         new Thread(e).start();
         
-        e.putMessage(new ElevatorActionResponse(1, ElevatorMotor.MotorState.UP).toBytes());
-        
         synchronized(o) {
+            e.putMessage(new ElevatorActionResponse(1, true, ElevatorMotor.MotorState.UP).toBytes());
             try {
                 o.wait();
             } catch (InterruptedException e1) {

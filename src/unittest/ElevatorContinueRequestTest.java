@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import main.elevator.ElevatorMotor;
 import utils.message.ElevatorContinueRequest;
 import utils.message.MessageType;
 
@@ -11,12 +12,13 @@ public class ElevatorContinueRequestTest {
 
     @Test
     public void test() {
-        MessageType messageTestType = MessageType.ELEVATOR_CONTINUE_REQUEST;
+        MessageType              messageTestType = MessageType.ELEVATOR_CONTINUE_REQUEST;
+        ElevatorMotor.MotorState motorState      = ElevatorMotor.MotorState.UP;
         byte carID = 4;
-        byte[] data = new byte[] {(byte)messageTestType.ordinal(), carID};
+        byte[] data = new byte[] {(byte)messageTestType.ordinal(), carID, (byte)motorState.ordinal()};
 
         ElevatorContinueRequest request1 = new ElevatorContinueRequest(data);
-        ElevatorContinueRequest request2 = new ElevatorContinueRequest(carID);
+        ElevatorContinueRequest request2 = new ElevatorContinueRequest(carID, motorState);
 
         assertEquals(carID, request1.carID());
         assertEquals(messageTestType.ordinal(), request1.toBytes()[0]);

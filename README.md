@@ -1,6 +1,6 @@
 =========================================
     
-    SYSC3303 Group Project Iteration 1
+    SYSC3303 Group Project Iteration 2
     Section L2 Group 7
     
     Names:
@@ -29,20 +29,11 @@
 
     ===== Breakdown of Responsibilities:
         Troy Havelock:
-            - State Machine Diagram & UML Diagram
-            - Test Case writing
-            - Parts of Elevator Subsystem
-            - Parts of messaging
-            - Parts of Floor subsystem
+            - ElevatorSchedule & FloorStop classes
+            - Update to UML Class Diagram
 
         Austin Mitchell:
-            - Scheduler subsystem
-            - Elevator subsystem
-            - Floor subsystem
-            - Messaging package
-            - Socket Wrapper classes
-            
+            - ElevatorSchedule & Scheduler updates
+
         All Team Members:
             - Worked together continuously at each step of the project
-            - Planned the State Machine together
-            - Planned the various sequences of the system together
