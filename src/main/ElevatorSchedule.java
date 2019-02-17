@@ -117,8 +117,7 @@ public class ElevatorSchedule {
 
                     if (this._currentTarget.buttonPresses().isEmpty()) {
                         this._currentDirection  = MotorState.STATIONARY;
-                    }
-                    else {
+                    } else {
                         this._currentDirection = this._currentTarget.direction();
                     }
 
