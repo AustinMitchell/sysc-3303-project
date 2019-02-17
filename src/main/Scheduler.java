@@ -269,27 +269,22 @@ public class Scheduler {
 
     private void handleElevatorContinueRequest(ElevatorContinueRequest request) {
         int id = request.carID();
-        int currentFloor = _elevatorSchedule[id].currentFloor();
-
 
         // If motor is engaged, change floor
-        if (request.actionTaken() == ElevatorMotor.MotorState.UP) {
-            _elevatorSchedule[id].setCurrentFloor(currentFloor+1);
-        } else if (request.actionTaken() == ElevatorMotor.MotorState.DOWN) {
-            _elevatorSchedule[id].setCurrentFloor(currentFloor-1);
+        if (request.actionTaken() != ElevatorMotor.MotorState.STATIONARY) {
+            _elevatorSchedule[id].moveToNextFloor();
         }
 
 
-        if (_elevatorSchedule[id].currentFloor() == _elevatorSchedule[id].currentTarget().target()) {
+        if (_elevatorSchedule[id].atTargetFloor()) {
             // Elevator met its target, so it needs to stop
-            // TODO: Call some function to resolve current schedule and extract new stops
-            FloorStop target = null;
+            List<Integer> target = _elevatorSchedule[id].updateCurrentTarget();
 
             System.out.println(String.format(" > Sending new ElevatorContinueResponse to elevator %d for it to stop", id));
             _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, _elevatorSchedule[id].currentFloor()).toBytes());
 
             SchedulerDestinationRequest newRequest = new SchedulerDestinationRequest(id);
-            for (int button: target.buttonPresses()) {
+            for (int button: target) {
                 // Add all the requested buttons to the request
                 newRequest.addFloor(button);
             }            
@@ -307,8 +302,7 @@ public class Scheduler {
 
     private void handleElevatorButtonPushEvent(ElevatorButtonPushEvent event) {
         int id = event.carID();
-
-        //TODO: Code to add all button pushes to elevator schedule
+        _elevatorSchedule[id].addButtonPress(event.floorNumber());
     }
 
     public static void main(String[] args) throws SocketException, UnknownHostException  {
