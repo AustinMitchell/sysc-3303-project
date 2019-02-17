@@ -114,8 +114,14 @@ public class ElevatorSchedule {
                     return this._currentTarget.buttonPresses();
                 }
                 else {
-                    this._currentTarget     = null;
-                    this._currentDirection  = MotorState.STATIONARY;
+
+                    if (this._currentTarget.buttonPresses().isEmpty()) {
+                        this._currentDirection  = MotorState.STATIONARY;
+                    }
+
+                    List<Integer> buttonPressesIntegers = this._currentTarget.buttonPresses();
+                    this._currentTarget = null;
+                    return buttonPressesIntegers;
                 }
             }
         }
@@ -146,6 +152,12 @@ public class ElevatorSchedule {
         return false;
     }
 
+    /**
+     * Calculates the cost of adding the floor entry to the elevator schedule
+     *
+     * @param entry
+     * @return number of floors needed to travel, or -1 if not possible
+     */
     public int cost(FloorInputEntry entry) {
 
         return -1;
@@ -157,7 +169,7 @@ public class ElevatorSchedule {
      * @param newTarget
      */
     private void addTarget(FloorStop newTarget) {
-        if (this._currentTarget == null) {
+        if (this._currentDirection == MotorState.STATIONARY) {
             // No current target, make current target the new target and change direction accordingly
             this._currentTarget = newTarget;
             if (newTarget.target() < this._currentFloor) {
@@ -171,33 +183,39 @@ public class ElevatorSchedule {
         else {
             // There is already a current target, add to the list of next targets in correct position
 
-            // Check first if there is already a stop at specified floor
-            int stopExists = checkStopExists(newTarget);
-            if (stopExists != -1) {
-                mergeButtonPresses(newTarget, stopExists);
+            // Check if the current target matches the new target
+            if (newTarget.target() == this._currentTarget.target()) {
+                mergeButtonPresses(newTarget, this._currentTarget);
             }
             else {
-
-                // Determine if we need to swap the current target and new target
-                if (this._currentDirection == MotorState.DOWN &&
-                    this._currentTarget.target() < newTarget.target()) {
-
-                    this._nextTargets.add(0, this._currentTarget);
-                    this._currentTarget = newTarget;
-
-                }
-                else if (this._currentDirection == MotorState.UP &&
-                         this._currentTarget.target() > newTarget.target()) {
-                    this._nextTargets.add(0, this._currentTarget);
-                    this._currentTarget = newTarget;
+             // Check if there is already a stop at specified floor
+                int stopExists = checkStopExists(newTarget);
+                if (stopExists != -1) {
+                    mergeButtonPresses(newTarget, this._nextTargets.get(stopExists));
                 }
                 else {
-                    this._nextTargets.add(newTarget);
-                    if (this._nextTargets.size() == 1) {
-                        Collections.sort(this._nextTargets, COMPARATOR.get(this._nextDirection));
-                    }
-                }
 
+                    // Determine if we need to swap the current target and new target
+                    if (this._nextDirection == MotorState.UP &&
+                        this._currentTarget.target() < newTarget.target()) {
+
+                        this._nextTargets.add(0, this._currentTarget);
+                        this._currentTarget = newTarget;
+
+                    }
+                    else if (this._nextDirection == MotorState.DOWN &&
+                             this._currentTarget.target() > newTarget.target()) {
+                        this._nextTargets.add(0, this._currentTarget);
+                        this._currentTarget = newTarget;
+                    }
+                    else {
+                        this._nextTargets.add(newTarget);
+                        if (this._nextTargets.size() > 1) {
+                            Collections.sort(this._nextTargets, COMPARATOR.get(this._nextDirection));
+                        }
+                    }
+
+                }
             }
         }
     }
@@ -224,9 +242,9 @@ public class ElevatorSchedule {
      * @param target
      * @param mergeTarget
      */
-    private void mergeButtonPresses(FloorStop target, int mergeTarget) {
+    private void mergeButtonPresses(FloorStop target, FloorStop existingTarget) {
         for (int i = 0; i < target.buttonPresses().size(); i++) {
-            this._nextTargets.get(mergeTarget).addButtonPress(target.buttonPresses().get(i));
+            existingTarget.addButtonPress(target.buttonPresses().get(i));
         }
     }
 }
