@@ -3,6 +3,7 @@ package main;
 import java.util.*;
 
 import main.elevator.ElevatorMotor.MotorState;
+import utils.message.FloorInputEntry;
 
 public class FloorStop {
     /* ===================================== */
@@ -73,6 +74,22 @@ public class FloorStop {
         this._target            = target;
         this._buttonPresses     = new ArrayList<Integer>();
         this._direction         = direction;
+    }
+
+    public FloorStop(FloorInputEntry inputEntry) {
+        this._target = inputEntry.floor();
+        switch (inputEntry.direction()) {
+        case DOWN:
+            this._direction = MotorState.DOWN;
+            break;
+        case UP:
+            this._direction = MotorState.UP;
+            break;
+        default:
+            this._direction = MotorState.STATIONARY;
+        }
+        this._buttonPresses     = new ArrayList<Integer>();
+        this._buttonPresses.add(inputEntry.destination());
     }
 
     /* ============================= */

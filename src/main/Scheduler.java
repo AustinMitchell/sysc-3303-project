@@ -156,11 +156,13 @@ public class Scheduler {
                 while (_floorSocket.hasMessage()) {
                     message = _floorSocket.getMessage();
                     if (message != null) {
+
                         switch(MessageType.fromOrdinal(message[0])) {
                         case FLOOR_INPUT_ENTRY:
                             System.out.println("    Recieved new FloorInputEntry");
                             handleFloorInputEntry(new FloorInputEntry(message));
                             break;
+
                         default:
                             break;
                         }
@@ -170,19 +172,23 @@ public class Scheduler {
                 while (_elevatorSocket.hasMessage()) {
                     message = _elevatorSocket.getMessage();
                     if (message != null) {
+
                         switch(MessageType.fromOrdinal(message[0])) {
                         case ELEVATOR_ACTION_REQUEST:
                             System.out.println("    Recieved new ElevatorActionRequest");
                             handleElevatorActionRequest(new ElevatorActionRequest(message));
                             break;
+
                         case ELEVATOR_CONTINUE_REQUEST:
                             System.out.println("    Recieved new ElevatorContinueRequest");
                             handleElevatorContinueRequest(new ElevatorContinueRequest(message));
                             break;
+
                         case ELEVATOR_BUTTON_PUSH_EVENT:
                             System.out.println("    Recieved new ElevatorButtonPushEvent");
                             handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
                             break;
+
                         default:
                             break;
                         }
@@ -212,7 +218,7 @@ public class Scheduler {
     private void handleFloorInputEntry(FloorInputEntry newEntry) {
         int leastCost       = -1;
         int bestElevator    = -1;
-        
+
         // calculate the cost each elevator would take to meet a request. cost == -1 means it rejected the request.
         for(int i=0; i<_numberOfElevators; i++) {
             int cost = _elevatorSchedule[i].cost(newEntry);
@@ -226,16 +232,16 @@ public class Scheduler {
             // If we got down here, then all elevators rejected the request. Place into the queue.
             System.out.println("> Floor request was rejected by all elevators; Placing into queue");
             _floorEntries.add(newEntry);
-            
+
         } else {
             System.out.println(String.format(" > Floor request was accepted by elevator %d at a cost of %d", bestElevator, leastCost));
-            
+
             // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait for the elevator to ask for work
             if (_elevatorSchedule[bestElevator].currentDirection() == ElevatorMotor.MotorState.STATIONARY) {
                 System.out.println(String.format(" > Sending new ElevatorActionResponse to elevator %d", bestElevator));
                 _elevatorSocket.sendMessage(new ElevatorActionResponse(bestElevator, true, ElevatorMotor.MotorState.STATIONARY).toBytes());
             }
-            
+
             // Finally modify our internal tracking
             _elevatorSchedule[bestElevator].addFloorEntry(newEntry);
         }
@@ -273,29 +279,29 @@ public class Scheduler {
             _elevatorSchedule[id].setCurrentFloor(currentFloor-1);
         }
 
-        
+
         if (_elevatorSchedule[id].currentFloor() == _elevatorSchedule[id].currentTarget().target()) {
             // Elevator met its target, so it needs to stop
             // TODO: Call some function to resolve current schedule and extract new stops
             FloorStop target = null;
-            
+
             System.out.println(String.format(" > Sending new ElevatorContinueResponse to elevator %d for it to stop", id));
             _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, _elevatorSchedule[id].currentFloor()).toBytes());
-            
+
             SchedulerDestinationRequest newRequest = new SchedulerDestinationRequest(id);
             for (int button: target.buttonPresses()) {
                 // Add all the requested buttons to the request
                 newRequest.addFloor(button);
             }            
-            
+
             System.out.println(String.format(" > Sending new SchedulerDestinationRequest to elevator %d with following floors: %s", id, newRequest.destinationsAsArray()));
             _elevatorSocket.sendMessage(newRequest.toBytes());
-            
+
         } else {
             // Elevator has not met its target, so it should continue.
             System.out.println(String.format(" > Sending new ElevatorContinueResponse to elevator %d for it to continue", id));
             _elevatorSocket.sendMessage(new ElevatorContinueResponse(id, -1).toBytes());
-            
+
         }
     }
 
