@@ -3,8 +3,10 @@ package main;
 import java.util.*;
 
 import main.elevator.ElevatorMotor.MotorState;
+import utils.message.FloorInputEntry;
 
 public class ElevatorSchedule {
+
     @SuppressWarnings("serial")
     private static final Map<MotorState, Comparator<FloorStop>> COMPARATOR = new EnumMap<MotorState, Comparator<FloorStop>>(MotorState.class) {{
         put(MotorState.UP, new Comparator<FloorStop>() {
@@ -20,6 +22,7 @@ public class ElevatorSchedule {
             }
         });
     }};
+
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
@@ -67,11 +70,93 @@ public class ElevatorSchedule {
     /* ========== METHODS ========== */
 
     /**
+     * Adds a floor input entry to the elevator schedule
+     *
+     * @param inputEntry
+     */
+    public void addFloorEntry(FloorInputEntry inputEntry) {
+        FloorStop newTarget = new FloorStop(inputEntry);
+        addTarget(newTarget);
+    }
+
+    /**
+     * Adds a button press floor input to the elevator schedule
+     *
+     * @param target
+     */
+    public void addButtonPress(int target) {
+        FloorStop newTarget = new FloorStop(target, this._currentDirection);
+        addTarget(newTarget);
+    }
+
+    /**
+     * Updates the current target based on the current floor
+     */
+    public List<Integer> updateCurrentTarget() {
+        if (this._currentTarget != null) {
+            // First see if we are at our current target before moving
+            if (this._currentFloor == this._currentTarget.target()) {
+                if (!this._nextTargets.isEmpty()) {
+                    this._currentTarget = this._nextTargets.get(0);
+                    this._nextTargets.remove(0);
+
+                    if (this._nextTargets.isEmpty() && this._currentTarget.buttonPresses().isEmpty()) {
+                        this._nextDirection = MotorState.STATIONARY;
+                    }
+                    else {
+                        if (this._nextTargets.get(0).target() < this._currentFloor) {
+                            this._currentDirection = MotorState.DOWN;
+                        } else {
+                            this._currentDirection = MotorState.UP;
+                        }
+                    }
+
+                    return this._currentTarget.buttonPresses();
+                }
+                else {
+                    this._currentTarget     = null;
+                    this._currentDirection  = MotorState.STATIONARY;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Moves the elevator to the next floor
+     */
+    public void moveToNextFloor() {
+        if (this._currentDirection == MotorState.UP) {
+            this._currentFloor++;
+        }
+        else if (this._currentDirection == MotorState.DOWN) {
+            this._currentFloor--;
+        }
+    }
+
+    /**
+     * Checks if the current floor matches the target floor
+     *
+     * @return
+     */
+    public boolean atTargetFloor() {
+        if (this._currentFloor == this._currentTarget.target()) {
+            return true;
+        }
+        return false;
+    }
+
+    public int cost(FloorInputEntry entry) {
+
+        return -1;
+    }
+
+    /**
      * Adds a new target to the elevator schedule
      *
      * @param newTarget
      */
-    public void addTarget(FloorStop newTarget) {
+    private void addTarget(FloorStop newTarget) {
         if (this._currentTarget == null) {
             // No current target, make current target the new target and change direction accordingly
             this._currentTarget = newTarget;
@@ -85,10 +170,63 @@ public class ElevatorSchedule {
         }
         else {
             // There is already a current target, add to the list of next targets in correct position
-            this._nextTargets.add(newTarget);
-            if (this._nextTargets.size() == 1) {
-                Collections.sort(this._nextTargets, COMPARATOR.get(this._nextDirection));
+
+            // Check first if there is already a stop at specified floor
+            int stopExists = checkStopExists(newTarget);
+            if (stopExists != -1) {
+                mergeButtonPresses(newTarget, stopExists);
             }
+            else {
+
+                // Determine if we need to swap the current target and new target
+                if (this._currentDirection == MotorState.DOWN &&
+                    this._currentTarget.target() < newTarget.target()) {
+
+                    this._nextTargets.add(0, this._currentTarget);
+                    this._currentTarget = newTarget;
+
+                }
+                else if (this._currentDirection == MotorState.UP &&
+                         this._currentTarget.target() > newTarget.target()) {
+                    this._nextTargets.add(0, this._currentTarget);
+                    this._currentTarget = newTarget;
+                }
+                else {
+                    this._nextTargets.add(newTarget);
+                    if (this._nextTargets.size() == 1) {
+                        Collections.sort(this._nextTargets, COMPARATOR.get(this._nextDirection));
+                    }
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Helper function to check if a stop exists that matches a given stop
+     *
+     * @param target
+     * @return index of the matching stop, -1 otherwise
+     */
+    private int checkStopExists(FloorStop target) {
+        for (int i = 0; i < this._nextTargets.size(); i++) {
+            if (target.target() == this._nextTargets.get(i).target() &&
+                target.direction() == this._nextTargets.get(i).direction()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Helper function to merge the button presses of two floor stops
+     *
+     * @param target
+     * @param mergeTarget
+     */
+    private void mergeButtonPresses(FloorStop target, int mergeTarget) {
+        for (int i = 0; i < target.buttonPresses().size(); i++) {
+            this._nextTargets.get(mergeTarget).addButtonPress(target.buttonPresses().get(i));
         }
     }
 }
