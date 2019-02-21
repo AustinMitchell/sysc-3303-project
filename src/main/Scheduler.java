@@ -192,25 +192,27 @@ public class Scheduler {
             return;
         }
         
-        log(" > Recieved raw message: %s", Message.bytesToString(message));
+        Message messageWrap = new Message(message);
+        
+        log(" > Recieved raw message: %s", messageWrap);
 
-        switch(MessageType.fromOrdinal(message[0])) {
+        switch(messageWrap.messageType()) {
         case FLOOR_INPUT_ENTRY:
             log(" > Recieved new FloorInputEntry");
             handleFloorInputEntry(new FloorInputEntry(message));
             break;
         case ELEVATOR_ACTION_REQUEST:
-            log(" > Recieved new ElevatorActionRequest from elevator %d", message[1]);
+            log(" > Recieved new ElevatorActionRequest from elevator %d", messageWrap.carID());
             handleElevatorActionRequest(new ElevatorActionRequest(message));
             break;
 
         case ELEVATOR_CONTINUE_REQUEST:
-            log(" > Recieved new ElevatorContinueRequest from elevator %d", message[1]);
+            log(" > Recieved new ElevatorContinueRequest from elevator %d", messageWrap.carID());
             handleElevatorContinueRequest(new ElevatorContinueRequest(message));
             break;
 
         case ELEVATOR_BUTTON_PUSH_EVENT:
-            log(" > Recieved new ElevatorButtonPushEvent from elevator %d", message[1]);
+            log(" > Recieved new ElevatorButtonPushEvent from elevator %d", messageWrap.carID());
             handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
             break;
 
