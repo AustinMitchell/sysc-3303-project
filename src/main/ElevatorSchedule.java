@@ -32,6 +32,7 @@ public class ElevatorSchedule {
 
     private List<FloorStop> _nextTargets;
     private MotorState      _nextDirection;
+    private boolean         _canStopCurrentFloor;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -48,6 +49,8 @@ public class ElevatorSchedule {
         _currentFloor = floor;
     }
 
+    public void setCanStopCurrentFloor(boolean canStop) { _canStopCurrentFloor = canStop; }
+
     /* ============================= */
     /* ========== GETTERS ========== */
 
@@ -63,11 +66,12 @@ public class ElevatorSchedule {
     /* ========== CONSTRUCTORS ========== */
 
     public ElevatorSchedule() {
-        this._currentFloor      = 1;
-        this._currentTarget     = null;
-        this._currentDirection  = MotorState.STATIONARY;
-        this._nextTargets       = new ArrayList<FloorStop>();
-        this._nextDirection     = MotorState.STATIONARY;
+        this._currentFloor          = 1;
+        this._currentTarget         = null;
+        this._currentDirection      = MotorState.STATIONARY;
+        this._nextTargets           = new ArrayList<FloorStop>();
+        this._nextDirection         = MotorState.STATIONARY;
+        this._canStopCurrentFloor   = true;
     }
 
     /* ============================= */
@@ -161,13 +165,15 @@ public class ElevatorSchedule {
      * @return number of floors needed to travel, or -1 if not possible
      */
     public int cost(FloorInputEntry entry) {
+        int retValue;
+
         if (this._currentDirection == MotorState.STATIONARY) {
             // idle state
-            return Math.abs(this._currentFloor - entry.floor());
+            retValue = Math.abs(this._currentFloor - entry.floor());
 
         } else if (this._nextDirection == MotorState.STATIONARY) {
             // Heading to a final stop
-            return Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+            retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
 
         } else if (this._currentDirection == this._nextDirection) {
             // Going to a request who has the same direction
@@ -177,7 +183,7 @@ public class ElevatorSchedule {
                 // Reject if you're past the request, or if it's in the opposite direction
                 return -1;
             }
-            return Math.abs(this._currentFloor - entry.floor());
+            retValue = Math.abs(this._currentFloor - entry.floor());
 
         } else {
             // Going to a request who has the opposite direction
@@ -185,7 +191,15 @@ public class ElevatorSchedule {
                 // Reject if it's in the opposite direction
                 return -1;
             }
-            return Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+            retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+        }
+
+        /* If we're currently at a floor for a request in the same direction (i.e. zero cost) and we've indicated the elevator has
+         * already passed, then say we've already passed this floor */
+        if (retValue == 0 && !_canStopCurrentFloor) {
+            return -1;
+        } else {
+            return retValue;
         }
     }
 
@@ -274,12 +288,12 @@ public class ElevatorSchedule {
             existingTarget.addButtonPress(target.buttonPresses().get(i));
         }
     }
-    
+
     public String targetListAsString() {
         if (_nextTargets.isEmpty()) {
             return "[]";
         }
-        
+
         StringBuilder result = new StringBuilder();
         result.append("[");
         for (FloorStop stop: _nextTargets) {

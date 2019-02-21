@@ -13,12 +13,8 @@ public class ElevatorManager {
     /* ========== PRIVATE MEMBERS ========== */
 	
     private ClientSocket    _schedulerSocket;
-
     private InetAddress     _schedulerIP;
-
     private Elevator[]      _elevators;
-
-    private int             _numFloors;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -99,7 +95,7 @@ public class ElevatorManager {
      * @throws IOException
      *
      */
-    public void loop() throws IOException {
+    public void loop() {
         System.out.println("Elevator System Started...");
 
         if (!_schedulerSocket.runSetupAndStartThreads()) {
@@ -110,34 +106,30 @@ public class ElevatorManager {
         _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_ELEVATORS});
 
         // Wait for scheduler to send off number of floors
-        _numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
+        int numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
 
         for (int i=0; i<NUMBER_OF_ELEVATORS; i++) {
-            _elevators[i] = new Elevator(this, _numFloors, i);
+            _elevators[i] = new Elevator(this, numFloors, i);
             new Thread(_elevators[i]).start();
         }
 
         // Start the main loop
         synchronized(this) {
             while (true) {
-                byte[] message;
-
                 // Checks the socket for new messages to send to an elevator
                 while(_schedulerSocket.hasMessage()) {
-                    message = _schedulerSocket.getMessage();
+                    byte[] message = _schedulerSocket.getMessage();
                     if (message != null) {
-//                        System.out.println("--------------------------------------");
-//                        System.out.println("ELEVATOR MANAGER Recieved new message: " + Arrays.toString(message));
-//                        System.out.println("ELEVATOR MANAGER Target elevator:      " + message[1]);
-
+                        System.out.println(String.format("ELEVATOR MANAGER: recieved %s", Arrays.toString(message)));
                         _elevators[message[1]].putMessage(message);
                     }
                 }
 
                 // Checks elevators for messages to send to the socket
                 for (Elevator e: _elevators) {
-                    message = e.getMessage();
+                    byte[] message = e.getMessage();
                     if (message != null) {
+                        System.out.println(String.format("ELEVATOR MANAGER: sending %s", Arrays.toString(message)));
                         _schedulerSocket.sendMessage(message);
                     }
                 }
@@ -158,7 +150,7 @@ public class ElevatorManager {
      * @param args
      * @throws IOException
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         ElevatorManager elevator;
 

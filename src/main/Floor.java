@@ -31,7 +31,7 @@ public class Floor {
     /* ========== PUBLIC MEMBERS ========== */
 
     public static final String  INPUT_FILE_PATH     = "floor_input.in";
-    public static final byte[]  NUMBER_OF_FLOORS    = { 10 };
+    public static final int     NUMBER_OF_FLOORS    = 10;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -68,10 +68,10 @@ public class Floor {
         }
 
         // Send the number of floors there are to the Scheduler
-        _schedulerSocket.sendMessage(NUMBER_OF_FLOORS);
+        _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_FLOORS});
 
         // Read the input file and establish a stack of entries
-        List<FloorInputEntry> entryList = new ArrayList<FloorInputEntry>();
+        List<FloorInputEntry> entryList = new ArrayList<>();
         BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
 
         for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
@@ -133,10 +133,6 @@ public class Floor {
         System.out.println(String.format("Entry as bytes: %s", Arrays.toString(bytes)));
 
         _schedulerSocket.sendMessage(bytes);
-        //_schedulerSocket.waitForMessage();
-
-        //FloorInputEntry returnMessage = new FloorInputEntry(_schedulerSocket.getMessage());
-        //System.out.println(String.format("Recieved message from Scheduler: %s", returnMessage));
     }
 
     /**
