@@ -2,7 +2,6 @@ package main;
 
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,6 +14,7 @@ import utils.message.ElevatorButtonPushEvent;
 import utils.message.ElevatorContinueRequest;
 import utils.message.ElevatorContinueResponse;
 import utils.message.FloorInputEntry;
+import utils.message.Message;
 import utils.message.MessageType;
 import utils.message.SchedulerDestinationRequest;
 
@@ -177,7 +177,7 @@ public class Scheduler {
     }
     
     private void sendMessageToElevator(byte[] message) {
-        log(" > Sending message: %s", Arrays.toString(message));
+        log(" > Sending raw message: %s", Message.bytesToString(message));
         _elevatorSocket.sendMessage(message);
     }
 
@@ -192,7 +192,7 @@ public class Scheduler {
             return;
         }
         
-        log(" > Message bytes: %s", Arrays.toString(message));
+        log(" > Recieved raw message: %s", Message.bytesToString(message));
 
         switch(MessageType.fromOrdinal(message[0])) {
         case FLOOR_INPUT_ENTRY:

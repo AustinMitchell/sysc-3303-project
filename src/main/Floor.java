@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import network.socket.ClientSocket;
 import utils.ResLoader;
 import utils.message.FloorInputEntry;
+import utils.message.Message;
 
 public class Floor {
 
@@ -127,10 +127,11 @@ public class Floor {
      * @param entry
      */
     private void sendEntryToScheduler(FloorInputEntry entry) {
+        System.out.println();
         System.out.println(String.format("Sending out new entry to Scheduler: %s", entry));
 
         byte[] bytes = entry.toBytes();
-        System.out.println(String.format("Entry as bytes: %s", Arrays.toString(bytes)));
+        System.out.println(String.format("Raw message: %s", Message.bytesToString(bytes)));
 
         _schedulerSocket.sendMessage(bytes);
     }

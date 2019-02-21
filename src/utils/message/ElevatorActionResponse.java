@@ -1,15 +1,20 @@
 package utils.message;
 
+import java.nio.ByteBuffer;
+
 import main.elevator.ElevatorMotor;
 
 /** Object for responding to an elevator car's action request. */
 public class ElevatorActionResponse {
     public static final MessageType MESSAGE_TYPE = MessageType.ELEVATOR_ACTION_RESPONSE;
 
-    private byte                     _carID;
-    private boolean                  _takeAction;
-    private ElevatorMotor.MotorState _motorState;
+    private int                         _count;
+    private byte                        _carID;
+    private boolean                     _takeAction;
+    private ElevatorMotor.MotorState    _motorState;
 
+    public int                      messageCount()  { return _count; }
+    
     /** Returns the car ID property */
     public int                      carID()         { return _carID; }
 
@@ -21,6 +26,7 @@ public class ElevatorActionResponse {
 
     /** Creates a new response object from the given car ID and action to take */
     public ElevatorActionResponse(int carID, boolean takeAction, ElevatorMotor.MotorState action) {
+        _count      = Counter.next();
         _carID      = (byte)carID;
         _takeAction = takeAction;
         _motorState = action;
@@ -32,9 +38,12 @@ public class ElevatorActionResponse {
      */
     public ElevatorActionResponse(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        _carID      = inputData[1];
-        _takeAction = (inputData[2]) == 1 ? true : false;
-        _motorState = ElevatorMotor.MotorState.fromOrdinal(inputData[3]);
+        ByteBuffer buffer = ByteBuffer.wrap(inputData).position(1);
+
+        _count      = buffer.getInt();
+        _carID      = buffer.get();
+        _takeAction = buffer.get() == 1;
+        _motorState = ElevatorMotor.MotorState.fromOrdinal(buffer.get());
     }
 
     /**
@@ -42,6 +51,12 @@ public class ElevatorActionResponse {
      * the ElevatorMotor.MotorMovement action
      */
     public byte[] toBytes() {
-        return new byte[] { (byte)MESSAGE_TYPE.ordinal(), _carID, (byte)(_takeAction ? 1 : 0), (byte)_motorState.ordinal() };
+        return ByteBuffer.allocate(8)
+                .put((byte)MESSAGE_TYPE.ordinal())
+                .putInt(_count)
+                .put(_carID)
+                .put((byte)(_takeAction ? 1 : 0))
+                .put((byte)_motorState.ordinal())
+                .array();
     }
 }

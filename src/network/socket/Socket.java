@@ -7,9 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import utils.DataQueueBox;
 import utils.WorkerThread;
@@ -50,7 +48,7 @@ public abstract class Socket {
     public int          recvPort()          { return _recvSocket.getPort(); }
     /** Get the address for the listening socket */
     public InetAddress  recvAddress()       { return _recvSocket.getInetAddress(); }
-    
+
     /** Return the connection status of the socket */
     public boolean      isConnected()       { return _running; }
 
@@ -85,7 +83,7 @@ public abstract class Socket {
 
         _sendQueue  = new DataQueueBox<>();
         _recvQueue  = new DataQueueBox<>();
-        
+
         _observer   = observer;
     }
 
@@ -101,7 +99,7 @@ public abstract class Socket {
 
         _sendQueue  = new DataQueueBox<>();
         _recvQueue  = new DataQueueBox<>();
-        
+
         _observer   = observer;
     }
 
@@ -205,14 +203,14 @@ public abstract class Socket {
             _recvSocket.close();
         }
     }
-    
+
     /** Creates a WorkerThread object which is given a Job that executes the runSetupAndStartThreads() function. */
     public WorkerThread<Boolean, Void> generateSetupWorkerThread() {
         return new WorkerThread<>(new WorkerThread.Job<Boolean, Void>() {
-                @Override
-                public Boolean execute(List<Void> inputData) {
-                    return runSetupAndStartThreads();
-                }
-            });
+            @Override
+            public Boolean execute(List<Void> inputData) {
+                return runSetupAndStartThreads();
+            }
+        });
     }
 }

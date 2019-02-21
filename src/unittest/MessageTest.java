@@ -10,14 +10,7 @@ public class MessageTest {
 
     @Test
     public void test() {
-        String testString = "Hello World!";
-        byte[] testBytes = testString.getBytes();
-
-        Message message1 = new Message(testString);
-        Message message2 = new Message(testBytes, testBytes.length);
-
-        assertArrayEquals(testBytes, message1.toByteArray());
-        assertArrayEquals(testBytes, message2.toByteArray());
+        // TODO: Complete test with new message object
     }
 
 }

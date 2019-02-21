@@ -2,10 +2,10 @@ package main.elevator;
 
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
 
 import main.Scheduler;
 import network.socket.ClientSocket;
+import utils.message.Message;
 
 public class ElevatorManager {
 
@@ -118,10 +118,10 @@ public class ElevatorManager {
             while (true) {
                 // Checks the socket for new messages to send to an elevator
                 while(_schedulerSocket.hasMessage()) {
-                    byte[] message = _schedulerSocket.getMessage();
-                    if (message != null) {
-                        System.out.println(String.format("ELEVATOR MANAGER: recieved %s", Arrays.toString(message)));
-                        _elevators[message[1]].putMessage(message);
+                    Message message = new Message(_schedulerSocket.getMessage());
+                    if (message.bytes() != null) {
+                        System.out.println(String.format("ELEVATOR MANAGER: recieved %s", message));
+                        _elevators[message.carID()].putMessage(message.bytes());
                     }
                 }
 
@@ -129,7 +129,7 @@ public class ElevatorManager {
                 for (Elevator e: _elevators) {
                     byte[] message = e.getMessage();
                     if (message != null) {
-                        System.out.println(String.format("ELEVATOR MANAGER: sending %s", Arrays.toString(message)));
+                        System.out.println(String.format("ELEVATOR MANAGER: sending %s", Message.bytesToString(message)));
                         _schedulerSocket.sendMessage(message);
                     }
                 }

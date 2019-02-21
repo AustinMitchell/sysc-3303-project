@@ -1,22 +1,28 @@
 package utils.message;
 
-import main.elevator.ElevatorMotor;
+import java.nio.ByteBuffer;
+
+import main.elevator.ElevatorMotor.MotorState;;
 
 /** Object for requesting whether an elevator should continue or stop at the floor. */
 public class ElevatorContinueRequest {
     public static final MessageType MESSAGE_TYPE = MessageType.ELEVATOR_CONTINUE_REQUEST;
     
-    private byte                     _carID;
-    private ElevatorMotor.MotorState _actionTaken;
+    private int         _count;             
+    private byte        _carID;
+    private MotorState  _actionTaken;
+    
+    public int          messageCount()  { return _count; }
     
     /** Returns the car ID property */
-    public int                      carID()         { return _carID; }
+    public int          carID()         { return _carID; }
     
     /** returns the action taken by the elevator */
-    public ElevatorMotor.MotorState actionTaken()   { return _actionTaken; }
+    public MotorState   actionTaken()   { return _actionTaken; }
     
     /** Creates a new request object from the given car ID */
-    public ElevatorContinueRequest(int carID, ElevatorMotor.MotorState actionTaken) {
+    public ElevatorContinueRequest(int carID, MotorState actionTaken) {
+        _count          = Counter.next();
         _carID          = (byte)carID;
         _actionTaken    = actionTaken;
     }
@@ -27,8 +33,11 @@ public class ElevatorContinueRequest {
      */
     public ElevatorContinueRequest(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        _carID       = inputData[1];
-        _actionTaken = ElevatorMotor.MotorState.fromOrdinal(inputData[2]);
+        ByteBuffer buffer = ByteBuffer.wrap(inputData).position(1);
+
+        _count          = buffer.getInt();
+        _carID          = buffer.get();
+        _actionTaken    = MotorState.fromOrdinal(buffer.get());
     }
     
     /**
@@ -36,6 +45,11 @@ public class ElevatorContinueRequest {
      * taken by the elevator
      */
     public byte[] toBytes() {
-        return new byte[] { (byte)MESSAGE_TYPE.ordinal(), _carID, (byte)_actionTaken.ordinal() };
+        return ByteBuffer.allocate(7)
+                .put((byte)MESSAGE_TYPE.ordinal())
+                .putInt(_count)
+                .put(_carID)
+                .put((byte)_actionTaken.ordinal())
+                .array();
     }
 }

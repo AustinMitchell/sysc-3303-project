@@ -1,8 +1,5 @@
 package main.elevator;
 
-
-import java.util.Arrays;
-
 import main.elevator.ElevatorMotor.MotorState;
 import utils.DataBox;
 import utils.DataQueueBox;
@@ -74,7 +71,7 @@ public class Elevator implements Runnable {
             message = _messageIncoming.getWhenNotEmpty();
 
             appendReport("--------------------------------------");
-            appendReport(String.format("ELEVATOR %d Recieved new message: %s", _carID, Arrays.toString(message)));
+            appendReport(String.format("ELEVATOR %d Recieved new message: %s", _carID, Message.bytesToString(message)));
 
             switch(MessageType.fromOrdinal(message[0])) {
             case ELEVATOR_ACTION_RESPONSE:
