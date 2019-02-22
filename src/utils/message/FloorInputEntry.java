@@ -53,7 +53,7 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
     /** Creates a new FloorInputEntry from a byte array. Only considers the first 9 bytes */
     public FloorInputEntry(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        ByteBuffer buffer = ByteBuffer.wrap(inputData).position(1);
+        ByteBuffer buffer = (ByteBuffer) ByteBuffer.wrap(inputData).position(1);
 
         _count          = buffer.getInt();
 

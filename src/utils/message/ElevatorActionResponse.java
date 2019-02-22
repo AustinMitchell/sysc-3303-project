@@ -14,7 +14,7 @@ public class ElevatorActionResponse {
     private ElevatorMotor.MotorState    _motorState;
 
     public int                      messageCount()  { return _count; }
-    
+
     /** Returns the car ID property */
     public int                      carID()         { return _carID; }
 
@@ -33,12 +33,12 @@ public class ElevatorActionResponse {
     }
 
     /**
-     * Creates a response object from the given byte array. First byte will be the message type, second byte is the car ID, 
+     * Creates a response object from the given byte array. First byte will be the message type, second byte is the car ID,
      * third byte is the ElevatorMotor.MotorMovement action
      */
     public ElevatorActionResponse(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        ByteBuffer buffer = ByteBuffer.wrap(inputData).position(1);
+        ByteBuffer buffer = (ByteBuffer) ByteBuffer.wrap(inputData).position(1);
 
         _count      = buffer.getInt();
         _carID      = buffer.get();

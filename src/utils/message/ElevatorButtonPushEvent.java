@@ -25,7 +25,7 @@ public class ElevatorButtonPushEvent {
     /* ========== GETTERS ========== */
 
     public int messageCount() { return _count; }
-    
+
     /**
      * Retrieves the carID of the elevator that sent the message
      *
@@ -65,7 +65,7 @@ public class ElevatorButtonPushEvent {
      */
     public ElevatorButtonPushEvent(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        ByteBuffer buffer = ByteBuffer.wrap(inputData).position(1);
+        ByteBuffer buffer = (ByteBuffer) ByteBuffer.wrap(inputData).position(1);
 
         this._count         = buffer.getInt();
         this._carID         = buffer.get();

@@ -17,7 +17,7 @@ public class SchedulerDestinationRequest {
     /** Returns the destination floor at an index */
     public int destinationFloor(int idx)    { return _destinationFloors.get(idx); }
     /** Returns the number of destination floors */
-    public int destinationFloorCount()      { return _destinationFloors.size(); } 
+    public int destinationFloorCount()      { return _destinationFloors.size(); }
 
     /** Add another destination floor to the request */
     public void addFloor(int newFloor)      { _destinationFloors.add((byte)newFloor); }
@@ -33,7 +33,7 @@ public class SchedulerDestinationRequest {
      * is the target destination floor */
     public SchedulerDestinationRequest(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
-        ByteBuffer buffer = ByteBuffer.wrap(inputData).position(1);
+        ByteBuffer buffer = (ByteBuffer) ByteBuffer.wrap(inputData).position(1);
 
         _count              = buffer.getInt();
         _carID              = buffer.get();
