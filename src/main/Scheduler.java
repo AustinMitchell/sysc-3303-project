@@ -15,7 +15,6 @@ import utils.message.ElevatorContinueRequest;
 import utils.message.ElevatorContinueResponse;
 import utils.message.FloorInputEntry;
 import utils.message.Message;
-import utils.message.MessageType;
 import utils.message.SchedulerDestinationRequest;
 
 public class Scheduler {
@@ -165,6 +164,8 @@ public class Scheduler {
                 }
                 
                 if (_loggingEnabled) {
+                    System.out.println();
+                    printEntryQueue();
                     printElevatorStates();
                 }
 
@@ -219,9 +220,20 @@ public class Scheduler {
         }
     }
 
+    public void printEntryQueue() {
+        System.out.println("---------------------------");
+        System.out.println("Floor entry backlog:");
+        if (_floorEntries.isEmpty()) {
+            System.out.println("    <empty>");
+        } else {
+            for (FloorInputEntry entry: _floorEntries) {
+                System.out.println(String.format("    %s", entry));
+            }
+        }
+    }
+    
     /** Prints the states of all the elevators */
-    public void printElevatorStates() {
-        System.out.println();
+    public void printElevatorStates() {System.out.println();
         System.out.println("---------------------------");
         for (int i=0; i<_numberOfElevators; i++) {
             System.out.println(String.format("Elevator %d position:         %d", i, _elevatorSchedules[i].currentFloor()));

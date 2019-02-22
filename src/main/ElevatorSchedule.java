@@ -187,7 +187,7 @@ public class ElevatorSchedule {
 
         } else {
             // Going to a request who has the opposite direction
-            if (entry.direction().toMotorState() != this._currentDirection) {
+            if (entry.direction().toMotorState() != this._nextDirection) {
                 // Reject if it's in the opposite direction
                 return -1;
             }
