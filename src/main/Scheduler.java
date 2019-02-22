@@ -163,8 +163,10 @@ public class Scheduler {
                     message = _elevatorSocket.getMessage();
                     handleMessage(message);
                 }
-
-                printElevatorStates();
+                
+                if (_loggingEnabled) {
+                    printElevatorStates();
+                }
 
                 try {
                     wait();
@@ -198,21 +200,17 @@ public class Scheduler {
 
         switch(messageWrap.messageType()) {
         case FLOOR_INPUT_ENTRY:
-            log(" > Recieved new FloorInputEntry");
             handleFloorInputEntry(new FloorInputEntry(message));
             break;
         case ELEVATOR_ACTION_REQUEST:
-            log(" > Recieved new ElevatorActionRequest from elevator %d", messageWrap.carID());
             handleElevatorActionRequest(new ElevatorActionRequest(message));
             break;
 
         case ELEVATOR_CONTINUE_REQUEST:
-            log(" > Recieved new ElevatorContinueRequest from elevator %d", messageWrap.carID());
             handleElevatorContinueRequest(new ElevatorContinueRequest(message));
             break;
 
         case ELEVATOR_BUTTON_PUSH_EVENT:
-            log(" > Recieved new ElevatorButtonPushEvent from elevator %d", messageWrap.carID());
             handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
             break;
 
@@ -223,19 +221,21 @@ public class Scheduler {
 
     /** Prints the states of all the elevators */
     public void printElevatorStates() {
+        System.out.println();
         System.out.println("---------------------------");
         for (int i=0; i<_numberOfElevators; i++) {
             System.out.println(String.format("Elevator %d position:         %d", i, _elevatorSchedules[i].currentFloor()));
+            System.out.println(String.format("Elevator %d state:            %s", i, _elevatorSchedules[i].isWaitingForJob() ? "idle" : "busy"));
             System.out.println(String.format("Elevator %d target:           %s", i, (_elevatorSchedules[i].currentTarget() == null) ? "(none)" : _elevatorSchedules[i].currentTarget()));
             System.out.println(String.format("Elevator %d motor:            %s", i, _elevatorSchedules[i].currentDirection()));
             System.out.println(String.format("Elevator %d target sequence:  %s", i, _elevatorSchedules[i].targetListAsString()));
             System.out.println("---------------------------");
         }
         
-        System.out.println("");
+        System.out.println();
         System.out.println("================================================");
         System.out.println("================================================");
-        System.out.println("");
+        System.out.println();
     }
 
     public void handleFloorInputEntry(FloorInputEntry newEntry) {
@@ -262,7 +262,7 @@ public class Scheduler {
             log(" > Floor request was accepted by elevator %d at a cost of %d", bestElevator, leastCost);
 
             // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait for the elevator to ask for work
-            if (_elevatorSchedules[bestElevator].currentDirection() == ElevatorMotor.MotorState.STATIONARY) {
+            if (_elevatorSchedules[bestElevator].isWaitingForJob()) {
                 _elevatorSchedules[bestElevator].addFloorEntry(newEntry);
                 log(" > Sending new ElevatorActionResponse to elevator %d", bestElevator);
                 sendMessageToElevator(new ElevatorActionResponse(bestElevator, true, _elevatorSchedules[bestElevator].currentDirection()).toBytes());
@@ -289,6 +289,7 @@ public class Scheduler {
             break;
         case STATIONARY:
             log(" > Sending new ElevatorActionResponse to elevator %d to disengage", id);
+            _elevatorSchedules[id].disengage();
             sendMessageToElevator(new ElevatorActionResponse(id, false, ElevatorMotor.MotorState.STATIONARY).toBytes());
             break;
         }

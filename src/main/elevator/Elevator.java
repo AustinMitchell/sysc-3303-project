@@ -110,6 +110,7 @@ public class Elevator implements Runnable {
 
     // Puts a new message into the outgoing box and lets the observer know about it
     private void putOutgoingMessage(byte[] message) {
+        appendReport(String.format("Sending raw message: %s", Message.bytesToString(message)));
         synchronized(_observer) {
             _messageOutgoing.putWhenEmpty(message);
             _observer.notifyAll();

@@ -120,7 +120,6 @@ public class ElevatorManager {
                 while(_schedulerSocket.hasMessage()) {
                     Message message = new Message(_schedulerSocket.getMessage());
                     if (message.bytes() != null) {
-                        System.out.println(String.format("ELEVATOR MANAGER: recieved %s", message));
                         _elevators[message.carID()].putMessage(message.bytes());
                     }
                 }
@@ -129,7 +128,6 @@ public class ElevatorManager {
                 for (Elevator e: _elevators) {
                     byte[] message = e.getMessage();
                     if (message != null) {
-                        System.out.println(String.format("ELEVATOR MANAGER: sending %s", Message.bytesToString(message)));
                         _schedulerSocket.sendMessage(message);
                     }
                 }

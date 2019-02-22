@@ -33,6 +33,7 @@ public class ElevatorSchedule {
     private List<FloorStop> _nextTargets;
     private MotorState      _nextDirection;
     private boolean         _canStopCurrentFloor;
+    private boolean         _isWaitingForJob;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -50,17 +51,21 @@ public class ElevatorSchedule {
     }
 
     public void setCanStopCurrentFloor(boolean canStop) { _canStopCurrentFloor = canStop; }
+    
+    public void disengage() { _isWaitingForJob = true; }
 
     /* ============================= */
     /* ========== GETTERS ========== */
 
-    public int currentFloor() { return this._currentFloor; }
+    public boolean      isWaitingForJob()   { return this._isWaitingForJob; }
+    
+    public int          currentFloor()      { return this._currentFloor; }
 
-    public FloorStop currentTarget() { return this._currentTarget; }
+    public FloorStop    currentTarget()     { return this._currentTarget; }
 
-    public MotorState currentDirection() { return this._currentDirection; }
+    public MotorState   currentDirection()  { return this._currentDirection; }
 
-    public MotorState nextDirection() { return this._nextDirection; }
+    public MotorState   nextDirection()     { return this._nextDirection; }
 
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
@@ -69,9 +74,10 @@ public class ElevatorSchedule {
         this._currentFloor          = 1;
         this._currentTarget         = null;
         this._currentDirection      = MotorState.STATIONARY;
-        this._nextTargets           = new ArrayList<FloorStop>();
+        this._nextTargets           = new ArrayList<>();
         this._nextDirection         = MotorState.STATIONARY;
         this._canStopCurrentFloor   = true;
+        this._isWaitingForJob       = true;
     }
 
     /* ============================= */
@@ -101,34 +107,31 @@ public class ElevatorSchedule {
      * Updates the current target based on the current floor
      */
     public List<Integer> updateCurrentTarget() {
-        if (this._currentTarget != null) {
-            // First see if we are at our current target before moving
-            if (this._currentFloor == this._currentTarget.target()) {
-                if (!this._nextTargets.isEmpty()) {
-                    this._currentTarget = this._nextTargets.get(0);
-                    this._nextTargets.remove(0);
+        if (this._currentTarget != null && this._currentFloor == this._currentTarget.target()) {
+            if (!this._nextTargets.isEmpty()) {
+                this._currentTarget = this._nextTargets.get(0);
+                this._nextTargets.remove(0);
 
-                    if (this._nextTargets.isEmpty() && this._currentTarget.buttonPresses().isEmpty()) {
-                        this._nextDirection = MotorState.STATIONARY;
-                    }
-                    else {
-                        this._currentDirection = this._nextDirection;
-                    }
-
-                    return this._currentTarget.buttonPresses();
+                if (this._nextTargets.isEmpty() && this._currentTarget.buttonPresses().isEmpty()) {
+                    this._nextDirection = MotorState.STATIONARY;
                 }
                 else {
-
-                    if (this._currentTarget.buttonPresses().isEmpty()) {
-                        this._currentDirection  = MotorState.STATIONARY;
-                    } else {
-                        this._currentDirection = this._currentTarget.direction();
-                    }
-
-                    List<Integer> buttonPressesIntegers = this._currentTarget.buttonPresses();
-                    this._currentTarget = null;
-                    return buttonPressesIntegers;
+                    this._currentDirection = this._nextDirection;
                 }
+
+                return this._currentTarget.buttonPresses();
+            }
+            else {
+
+                if (this._currentTarget.buttonPresses().isEmpty()) {
+                    this._currentDirection  = MotorState.STATIONARY;
+                } else {
+                    this._currentDirection = this._currentTarget.direction();
+                }
+
+                List<Integer> buttonPressesIntegers = this._currentTarget.buttonPresses();
+                this._currentTarget = null;
+                return buttonPressesIntegers;
             }
         }
         return null;
@@ -152,10 +155,7 @@ public class ElevatorSchedule {
      * @return
      */
     public boolean atTargetFloor() {
-        if (this._currentFloor == this._currentTarget.target()) {
-            return true;
-        }
-        return false;
+        return this._currentFloor == this._currentTarget.target();
     }
 
     /**
@@ -209,6 +209,7 @@ public class ElevatorSchedule {
      * @param newTarget
      */
     private void addTarget(FloorStop newTarget) {
+        this._isWaitingForJob = false;
         if (this._currentDirection == MotorState.STATIONARY || this._currentTarget == null) {
             // No current target, make current target the new target and change direction accordingly
             this._currentTarget = newTarget;
