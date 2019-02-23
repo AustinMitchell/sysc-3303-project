@@ -21,17 +21,17 @@ public class Scheduler {
     public static Scheduler generateTestScheduler(int numFloors, int numElevators) {
         Scheduler scheduler;
         try {
-            scheduler = new Scheduler();
-            scheduler._numberOfFloors       = numFloors;
-            scheduler._numberOfElevators    = numElevators;
-            scheduler._floorEntries         = new LinkedList<>();
-            scheduler._elevatorSchedules    = new ElevatorSchedule[numElevators];
-            for (int i=0; i<numElevators; i++) {
+            scheduler                    = new Scheduler();
+            scheduler._numberOfFloors    = numFloors;
+            scheduler._numberOfElevators = numElevators;
+            scheduler._floorEntries      = new LinkedList<>();
+            scheduler._elevatorSchedules = new ElevatorSchedule[numElevators];
+            for (int i = 0; i < numElevators; i++) {
                 scheduler._elevatorSchedules[i] = new ElevatorSchedule();
             }
 
         } catch (SocketException | UnknownHostException e) {
-            e.printStackTrace();            
+            e.printStackTrace();
             return null;
         }
 
@@ -41,29 +41,28 @@ public class Scheduler {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-    private ServerSocket            _floorSocket;
-    private ServerSocket            _elevatorSocket;
+    private ServerSocket _floorSocket;
+    private ServerSocket _elevatorSocket;
 
-    private int                     _numberOfFloors;
-    private int                     _numberOfElevators;
+    private int _numberOfFloors;
+    private int _numberOfElevators;
 
-    private List<FloorInputEntry>   _floorEntries;
+    private List<FloorInputEntry> _floorEntries;
 
-    private ElevatorSchedule[]      _elevatorSchedules;
-    
-    private boolean                 _loggingEnabled;
+    private ElevatorSchedule[] _elevatorSchedules;
+
+    private boolean _loggingEnabled;
 
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
 
 
-
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-    public static final int PORT_FLOOR          = 5000;
-    public static final int PORT_ELEVATOR       = 5001;
+    public static final int PORT_FLOOR    = 5000;
+    public static final int PORT_ELEVATOR = 5001;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -78,30 +77,27 @@ public class Scheduler {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * Scheduler constructor
+    /** Scheduler constructor
      * @throws UnknownHostException
-     * @throws SocketException
-     */
+     * @throws SocketException */
     public Scheduler() throws SocketException, UnknownHostException {
-        _floorSocket        = new ServerSocket(this, PORT_FLOOR);
-        _elevatorSocket     = new ServerSocket(this, PORT_ELEVATOR);
+        _floorSocket    = new ServerSocket(this, PORT_FLOOR);
+        _elevatorSocket = new ServerSocket(this, PORT_ELEVATOR);
 
-        _numberOfFloors     = 0;
-        _numberOfElevators  = 0;
+        _numberOfFloors    = 0;
+        _numberOfElevators = 0;
 
-        _floorEntries       = new LinkedList<>();
-        
-        _loggingEnabled     = true;
+        _floorEntries = new LinkedList<>();
+
+        _loggingEnabled = true;
     }
 
     /* ============================= */
     /* ========== METHODS ========== */
 
-    /**
-     * Sets up both server sockets. They wait for a connection to be established from a client socket and set up the send and receive ports.
-     * @return boolean Returns the success of both
-     */
+    /** Sets up both server sockets. They wait for a connection to be established from a client socket and set up the
+     * send and receive ports.
+     * @return boolean Returns the success of both */
     private boolean setupSockets() {
         WorkerThread<Boolean, Void> floorConnect    = _floorSocket.generateSetupWorkerThread();
         WorkerThread<Boolean, Void> elevatorConnect = _elevatorSocket.generateSetupWorkerThread();
@@ -110,7 +106,7 @@ public class Scheduler {
         floorConnect.run();
         elevatorConnect.run();
 
-        while(!floorConnect.jobIsFinished() || !elevatorConnect.jobIsFinished()) {
+        while (!floorConnect.jobIsFinished() || !elevatorConnect.jobIsFinished()) {
             try {
                 Thread.sleep(250);
             } catch (InterruptedException e) {
@@ -140,17 +136,17 @@ public class Scheduler {
 
         // Send the number of floors to the elevator so it can instantiate properly
         log("Sending number of floors to elevator");
-        _elevatorSocket.sendMessage(new byte[] {(byte)_numberOfFloors});
+        _elevatorSocket.sendMessage(new byte[] { (byte) _numberOfFloors });
 
         _elevatorSchedules = new ElevatorSchedule[_numberOfElevators];
 
-        for (int i=0; i<_numberOfElevators; i++) {
+        for (int i = 0; i < _numberOfElevators; i++) {
             _elevatorSchedules[i] = new ElevatorSchedule();
         }
 
-        synchronized(this) {
+        synchronized (this) {
             byte[] message;
-            while(_floorSocket.isConnected() && _elevatorSocket.isConnected()) {
+            while (_floorSocket.isConnected() && _elevatorSocket.isConnected()) {
 
 
                 while (_floorSocket.hasMessage()) {
@@ -162,7 +158,7 @@ public class Scheduler {
                     message = _elevatorSocket.getMessage();
                     handleMessage(message);
                 }
-                
+
                 if (_loggingEnabled) {
                     System.out.println();
                     printEntryQueue();
@@ -178,7 +174,7 @@ public class Scheduler {
         }
 
     }
-    
+
     private void sendMessageToElevator(byte[] message) {
         log(" > Sending raw message: %s", Message.bytesToString(message));
         _elevatorSocket.sendMessage(message);
@@ -189,34 +185,34 @@ public class Scheduler {
             System.out.println(String.format(message, formatArgs));
         }
     }
-    
+
     private void handleMessage(byte[] message) {
         if (message == null) {
             return;
         }
-        
+
         Message messageWrap = new Message(message);
-        
+
         log(" > Recieved raw message: %s", messageWrap);
 
-        switch(messageWrap.messageType()) {
-        case FLOOR_INPUT_ENTRY:
-            handleFloorInputEntry(new FloorInputEntry(message));
-            break;
-        case ELEVATOR_ACTION_REQUEST:
-            handleElevatorActionRequest(new ElevatorActionRequest(message));
-            break;
+        switch (messageWrap.messageType()) {
+            case FLOOR_INPUT_ENTRY:
+                handleFloorInputEntry(new FloorInputEntry(message));
+                break;
+            case ELEVATOR_ACTION_REQUEST:
+                handleElevatorActionRequest(new ElevatorActionRequest(message));
+                break;
 
-        case ELEVATOR_CONTINUE_REQUEST:
-            handleElevatorContinueRequest(new ElevatorContinueRequest(message));
-            break;
+            case ELEVATOR_CONTINUE_REQUEST:
+                handleElevatorContinueRequest(new ElevatorContinueRequest(message));
+                break;
 
-        case ELEVATOR_BUTTON_PUSH_EVENT:
-            handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
-            break;
+            case ELEVATOR_BUTTON_PUSH_EVENT:
+                handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
 
@@ -231,19 +227,21 @@ public class Scheduler {
             }
         }
     }
-    
+
     /** Prints the states of all the elevators */
-    public void printElevatorStates() {System.out.println();
+    public void printElevatorStates() {
+        System.out.println();
         System.out.println("---------------------------");
-        for (int i=0; i<_numberOfElevators; i++) {
+        for (int i = 0; i < _numberOfElevators; i++) {
             System.out.println(String.format("Elevator %d position:         %d", i, _elevatorSchedules[i].currentFloor()));
             System.out.println(String.format("Elevator %d state:            %s", i, _elevatorSchedules[i].isWaitingForJob() ? "idle" : "busy"));
             System.out.println(String.format("Elevator %d target:           %s", i, (_elevatorSchedules[i].currentTarget() == null) ? "(none)" : _elevatorSchedules[i].currentTarget()));
-            System.out.println(String.format("Elevator %d motor:            %s", i, _elevatorSchedules[i].currentDirection()));
+            System.out.println(String.format("Elevator %d direction:        %s", i, _elevatorSchedules[i].currentDirection()));
+            System.out.println(String.format("Elevator %d next direction:   %s", i, _elevatorSchedules[i].nextDirection()));
             System.out.println(String.format("Elevator %d target sequence:  %s", i, _elevatorSchedules[i].targetListAsString()));
             System.out.println("---------------------------");
         }
-        
+
         System.out.println();
         System.out.println("================================================");
         System.out.println("================================================");
@@ -251,17 +249,17 @@ public class Scheduler {
     }
 
     public void handleFloorInputEntry(FloorInputEntry newEntry) {
-        int leastCost       = -1;
-        int bestElevator    = -1;
+        int leastCost    = -1;
+        int bestElevator = -1;
 
         log(" > New entry data: %s", newEntry);
 
         // calculate the cost each elevator would take to meet a request. cost == -1 means it rejected the request.
-        for(int i=0; i<_numberOfElevators; i++) {
+        for (int i = 0; i < _numberOfElevators; i++) {
             int cost = _elevatorSchedules[i].cost(newEntry);
-            if (cost != -1 && (bestElevator == -1 || cost < leastCost)) {
-                leastCost       = cost;
-                bestElevator    = i;
+            if ((cost != -1) && ((bestElevator == -1) || (cost < leastCost))) {
+                leastCost    = cost;
+                bestElevator = i;
             }
         }
 
@@ -273,7 +271,8 @@ public class Scheduler {
         } else {
             log(" > Floor request was accepted by elevator %d at a cost of %d", bestElevator, leastCost);
 
-            // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait for the elevator to ask for work
+            // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait
+            // for the elevator to ask for work
             if (_elevatorSchedules[bestElevator].isWaitingForJob()) {
                 _elevatorSchedules[bestElevator].addFloorEntry(newEntry);
                 log(" > Sending new ElevatorActionResponse to elevator %d", bestElevator);
@@ -289,21 +288,39 @@ public class Scheduler {
     public void handleElevatorActionRequest(ElevatorActionRequest request) {
         int id = request.carID();
 
+        // Check the backlog to see if there's a request we can put into the schedule
+        int bestEntry = -1;
+        int bestCost  = -1;
+        for (int i = 0; i < _floorEntries.size(); i++) {
+            int cost = _elevatorSchedules[id].cost(_floorEntries.get(i));
+            if ((cost != -1) && ((bestEntry == -1) || (cost < bestCost))) {
+                bestCost  = cost;
+                bestEntry = i;
+            }
+        }
+
+        if (bestEntry != -1) {
+            FloorInputEntry newEntry = _floorEntries.remove(bestEntry);
+            log(" > Elevator %d accepted a request from the backlog: %s", id, newEntry);
+
+            _elevatorSchedules[id].addFloorEntry(newEntry);
+        }
+
         // Poll what the current schedule says we should do
-        switch(_elevatorSchedules[id].currentDirection()) {
-        case UP:
-            log(" > Sending new ElevatorActionResponse to elevator %d to go UP", id);
-            sendMessageToElevator(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.UP).toBytes());
-            break;
-        case DOWN:
-            log(" > Sending new ElevatorActionResponse to elevator %d to go DOWN", id);
-            sendMessageToElevator(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.DOWN).toBytes());
-            break;
-        case STATIONARY:
-            log(" > Sending new ElevatorActionResponse to elevator %d to disengage", id);
-            _elevatorSchedules[id].disengage();
-            sendMessageToElevator(new ElevatorActionResponse(id, false, ElevatorMotor.MotorState.STATIONARY).toBytes());
-            break;
+        switch (_elevatorSchedules[id].currentDirection()) {
+            case UP:
+                log(" > Sending new ElevatorActionResponse to elevator %d to go UP", id);
+                sendMessageToElevator(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.UP).toBytes());
+                break;
+            case DOWN:
+                log(" > Sending new ElevatorActionResponse to elevator %d to go DOWN", id);
+                sendMessageToElevator(new ElevatorActionResponse(id, true, ElevatorMotor.MotorState.DOWN).toBytes());
+                break;
+            case STATIONARY:
+                log(" > Sending new ElevatorActionResponse to elevator %d to disengage", id);
+                _elevatorSchedules[id].disengage();
+                sendMessageToElevator(new ElevatorActionResponse(id, false, ElevatorMotor.MotorState.STATIONARY).toBytes());
+                break;
         }
     }
 
@@ -312,7 +329,7 @@ public class Scheduler {
 
         // Set our ability to stop at a floor to true. This will be set to false if we continue past this floor.
         _elevatorSchedules[id].setCanStopCurrentFloor(true);
-        
+
         // If motor is engaged, change floor
         if (request.actionTaken() != ElevatorMotor.MotorState.STATIONARY) {
             _elevatorSchedules[id].moveToNextFloor();
@@ -330,7 +347,7 @@ public class Scheduler {
             for (int button: target) {
                 // Add all the requested buttons to the request
                 newRequest.addFloor(button);
-            }            
+            }
 
             log(" > Sending new SchedulerDestinationRequest to elevator %d with following floors: %s", id, newRequest.destinationsAsArray());
             sendMessageToElevator(newRequest.toBytes());
@@ -349,8 +366,6 @@ public class Scheduler {
         _elevatorSchedules[id].addButtonPress(event.floorNumber());
     }
 
-    public static void main(String[] args) throws SocketException, UnknownHostException  {
-        new Scheduler().run();
-    }
+    public static void main(String[] args) throws SocketException, UnknownHostException { new Scheduler().run(); }
 
 }

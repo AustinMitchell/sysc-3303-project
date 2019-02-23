@@ -1,7 +1,9 @@
 package main.elevator;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import main.Scheduler;
 import network.socket.ClientSocket;
@@ -11,10 +13,10 @@ public class ElevatorManager {
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
-	
-    private ClientSocket    _schedulerSocket;
-    private InetAddress     _schedulerIP;
-    private Elevator[]      _elevators;
+
+    private ClientSocket _schedulerSocket;
+    private InetAddress  _schedulerIP;
+    private Elevator[]   _elevators;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -23,7 +25,7 @@ public class ElevatorManager {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-    public static final int NUMBER_OF_ELEVATORS = 3;
+    public static final int NUMBER_OF_ELEVATORS = 2;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -36,10 +38,7 @@ public class ElevatorManager {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    /**
-     * Constructor that uses localhost as the Scheduler IP
-     *
-     */
+    /** Constructor that uses localhost as the Scheduler IP */
     public ElevatorManager() {
         // Initialize the scheduler IP address to the local host
         try {
@@ -55,11 +54,8 @@ public class ElevatorManager {
         this.initializeSchedulerSocket();
     }
 
-    /**
-     * Constructor that receives the Scheduler IP
-     *
-     * @param IPAddress
-     */
+    /** Constructor that receives the Scheduler IP
+     * @param IPAddress */
     public ElevatorManager(String IPAddress) {
         // Initialize the scheduler IP to the passed IP address
         try {
@@ -78,9 +74,7 @@ public class ElevatorManager {
     /* ============================= */
     /* ========== METHODS ========== */
 
-    /**
-     * Method to set up the scheduler socket
-     */
+    /** Method to set up the scheduler socket */
     private void initializeSchedulerSocket() {
         try {
             _schedulerSocket = new ClientSocket(this, _schedulerIP, Scheduler.PORT_ELEVATOR);
@@ -90,11 +84,8 @@ public class ElevatorManager {
         }
     }
 
-    /**
-     * The main running loop for Elevator
-     * @throws IOException
-     *
-     */
+    /** The main running loop for Elevator
+     * @throws IOException */
     public void loop() {
         System.out.println("Elevator System Started...");
 
@@ -103,21 +94,21 @@ public class ElevatorManager {
         }
 
         // Send the number of elevators to the scheduler
-        _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_ELEVATORS});
+        _schedulerSocket.sendMessage(new byte[] { NUMBER_OF_ELEVATORS });
 
         // Wait for scheduler to send off number of floors
         int numFloors = _schedulerSocket.getMessageWhenNotEmpty()[0];
 
-        for (int i=0; i<NUMBER_OF_ELEVATORS; i++) {
+        for (int i = 0; i < NUMBER_OF_ELEVATORS; i++) {
             _elevators[i] = new Elevator(this, numFloors, i);
             new Thread(_elevators[i]).start();
         }
 
         // Start the main loop
-        synchronized(this) {
+        synchronized (this) {
             while (true) {
                 // Checks the socket for new messages to send to an elevator
-                while(_schedulerSocket.hasMessage()) {
+                while (_schedulerSocket.hasMessage()) {
                     Message message = new Message(_schedulerSocket.getMessage());
                     if (message.bytes() != null) {
                         _elevators[message.carID()].putMessage(message.bytes());
@@ -142,12 +133,9 @@ public class ElevatorManager {
         }
     }
 
-    /**
-     * Starts the main loop
-     *
-     * @param args
-     * @throws IOException
-     */
+    /** Starts the main loop
+     * @param  args
+     * @throws IOException */
     public static void main(String[] args) {
 
         ElevatorManager elevator;
@@ -155,8 +143,7 @@ public class ElevatorManager {
         // Construct a new Elevator
         if (args.length == 0) {
             elevator = new ElevatorManager();
-        }
-        else {
+        } else {
             elevator = new ElevatorManager(args[0]);
         }
 
