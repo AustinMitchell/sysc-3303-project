@@ -48,7 +48,7 @@ public class Scheduler {
     private int _numberOfFloors;
     private int _numberOfElevators;
 
-    private List<FloorInputEntry> _floorEntries;
+    private List<FloorStop> _floorEntries;
 
     private ElevatorSchedule[] _elevatorSchedules;
 
@@ -226,7 +226,7 @@ public class Scheduler {
         if (_floorEntries.isEmpty()) {
             System.out.println("    <empty>");
         } else {
-            for (FloorInputEntry entry: _floorEntries) {
+            for (FloorStop entry: _floorEntries) {
                 System.out.println(String.format("    %s", entry));
             }
         }
@@ -270,7 +270,7 @@ public class Scheduler {
         if (bestElevator == -1) {
             // If we got down here, then all elevators rejected the request. Place into the queue.
             log("> Floor request was rejected by all elevators; Placing into queue");
-            _floorEntries.add(newEntry);
+            _floorEntries.add(new FloorStop(newEntry));
 
         } else {
             log(" > Floor request was accepted by elevator %d at a cost of %d", bestElevator, leastCost);
@@ -278,11 +278,11 @@ public class Scheduler {
             // Only send a message if the elevator is currently idle, because it's waiting for action. Otherwise wait
             // for the elevator to ask for work
             if (_elevatorSchedules[bestElevator].isWaitingForJob()) {
-                _elevatorSchedules[bestElevator].addFloorEntry(newEntry);
+                _elevatorSchedules[bestElevator].addNewTarget(newEntry);
                 log(" > Sending new ElevatorActionResponse to elevator %d", bestElevator);
                 sendMessageToElevator(new ElevatorActionResponse(bestElevator, true, _elevatorSchedules[bestElevator].currentDirection()).toBytes());
             } else {
-                _elevatorSchedules[bestElevator].addFloorEntry(newEntry);
+                _elevatorSchedules[bestElevator].addNewTarget(newEntry);
             }
 
 
@@ -308,10 +308,10 @@ public class Scheduler {
         }
 
         if (bestEntry != -1) {
-            FloorInputEntry newEntry = _floorEntries.remove(bestEntry);
+            FloorStop newEntry = _floorEntries.remove(bestEntry);
             log(" > Elevator %d accepted a request from the backlog: %s", id, newEntry);
 
-            _elevatorSchedules[id].addFloorEntry(newEntry);
+            _elevatorSchedules[id].addNewTarget(newEntry);
         }
 
         // Poll what the current schedule says we should do

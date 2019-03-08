@@ -86,9 +86,14 @@ public class ElevatorSchedule {
 
     /** Adds a floor input entry to the elevator schedule
      * @param inputEntry */
-    public void addFloorEntry(FloorInputEntry inputEntry) {
-        FloorStop newTarget = new FloorStop(inputEntry);
-        addTarget(newTarget);
+    public void addNewTarget(FloorInputEntry inputEntry) {
+    	addNewTarget(new FloorStop(inputEntry));
+    }
+    
+    /** Adds a floor stop to the elevator schedule
+     * @param floorStop */
+    public void addNewTarget(FloorStop floorStop) {
+        addTarget(floorStop);
     }
 
     /** Adds a button press floor input to the elevator schedule
@@ -145,32 +150,37 @@ public class ElevatorSchedule {
      * @param  entry
      * @return       number of floors needed to travel, or -1 if not possible */
     public int cost(FloorInputEntry entry) {
-        int retValue;
+        return cost(new FloorStop(entry));
+    }
+    
+    public int cost(FloorStop stop) {
+    	int retValue;
 
         if (this._currentDirection == MotorState.STATIONARY) {
             // idle state
-            retValue = Math.abs(this._currentFloor - entry.floor());
+            retValue = Math.abs(this._currentFloor - stop.target());
 
         } else if (this._nextDirection == MotorState.STATIONARY) {
             // Heading to a final stop
-            retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+            retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - stop.target());
 
         } else if (this._currentDirection == this._nextDirection) {
             // Going to a request who has the same direction
-            if (((this._currentDirection == MotorState.UP) && (entry.floor() < this._currentFloor)) || ((this._currentDirection == MotorState.DOWN) && (entry.floor() > this._currentFloor))
-                    || (entry.direction().toMotorState() != this._currentDirection)) {
+            if (((this._currentDirection == MotorState.UP) && (stop.target() < this._currentFloor)) 
+            		|| ((this._currentDirection == MotorState.DOWN) && (stop.target() > this._currentFloor))
+                    || (stop.direction() != this._currentDirection)) {
                 // Reject if you're past the request, or if it's in the opposite direction
                 return -1;
             }
-            retValue = Math.abs(this._currentFloor - entry.floor());
+            retValue = Math.abs(this._currentFloor - stop.target());
 
         } else {
             // Going to a request who has the opposite direction
-            if (entry.direction().toMotorState() != this._nextDirection) {
+            if (stop.direction() != this._nextDirection) {
                 // Reject if it's in the opposite direction
                 return -1;
             }
-            retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - entry.floor());
+            retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - stop.target());
         }
 
         /*
