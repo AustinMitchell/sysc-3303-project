@@ -166,6 +166,7 @@ public class Elevator implements Runnable {
         if (continueResponse.response() == -1) {
             if (this._motorStuckError) {
                 appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d motor is stuck", this._carID);
+                this._motor.setMotorState(MotorState.BROKEN);
                 putOutgoingMessage(new ElevatorError(SystemFault.ELEVATOR_STUCK, this._carID).toBytes());
             }
             else {
@@ -192,7 +193,6 @@ public class Elevator implements Runnable {
             // Check if the door is stuck closed and resolve the error
             if (this._doorStuckClosedError) {
                 appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d doors stuck closed, attempting to resolve fault", this._carID);
-                this._motor.setMotorState(MotorState.BROKEN);
                 putOutgoingMessage(new ElevatorError(SystemFault.DOOR_STUCK_CLOSED, this._carID).toBytes());
                 try {
                     Thread.sleep(DOOR_ERROR_TIMEOUT);
