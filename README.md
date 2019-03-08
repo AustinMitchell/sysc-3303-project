@@ -1,6 +1,6 @@
 =========================================
     
-    SYSC3303 Group Project Iteration 2
+    SYSC3303 Group Project Iteration 3
     Section L2 Group 7
     
     Names:
@@ -26,14 +26,27 @@
         suite located in the unittest package. To run it, run the 
         UnitTestSuite as a JUnit test case, and this will run all the
         test cases.
+        
+    ===== Input file format:
+        All files now have a digit at the beginning that differentiate
+        the type of input. 0 is a floor entry and 1 is an error entry.
+        Error entry format is as such:
+            <Timestamp> <error type> <elevator number>
+        Error types are as follows:
+            0: Elevator motor stuck
+            1: Door stuck open
+            2: Door stuck closed
+        
 
     ===== Breakdown of Responsibilities:
         Troy Havelock:
-            - ElevatorSchedule & FloorStop classes
-            - Update to UML Class Diagram
+            - Rearchitectured floor subsystem
+            - Created new diagram
 
         Austin Mitchell:
             - ElevatorSchedule & Scheduler updates
+            - Fix runtime bugs
 
         All Team Members:
             - Worked together continuously at each step of the project
+            - Added elevator handlers
