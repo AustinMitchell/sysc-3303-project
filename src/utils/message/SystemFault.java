@@ -17,19 +17,4 @@ public enum SystemFault {
                 return null;
         }
     }
-
-    @Override
-    public String toString() {
-        switch (this) {
-        case ELEVATOR_STUCK:
-            return "ELEVATOR_STUCK";
-        case DOOR_STUCK_OPEN:
-            return "DOOR_STUCK_OPEN";
-        case DOOR_STUCK_CLOSED:
-            return "DOOR_STUCK_CLOSED";
-
-        default:
-            return "<invalid>";
-        }
-    }
 }
