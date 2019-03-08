@@ -37,6 +37,8 @@ public class ElevatorSchedule {
     private MotorState      _nextDirection;
     private boolean         _canStopCurrentFloor;
     private boolean         _isWaitingForJob;
+    private boolean         _doorStuck;
+    private boolean         _motorStuck;
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -54,6 +56,10 @@ public class ElevatorSchedule {
     public void setCanStopCurrentFloor(boolean canStop) { _canStopCurrentFloor = canStop; }
 
     public void disengage() { _isWaitingForJob = true; }
+    
+    public void setDoorStuck(boolean stuck) { _doorStuck = stuck; }
+    
+    public void setMotorStuck(boolean stuck) { _motorStuck = stuck; }
 
     /* ============================= */
     /* ========== GETTERS ========== */
@@ -67,6 +73,22 @@ public class ElevatorSchedule {
     public MotorState currentDirection() { return this._currentDirection; }
 
     public MotorState nextDirection() { return this._nextDirection; }
+    
+    public List<FloorStop> allPickupRequests() {
+        List<FloorStop> pickups = new ArrayList<>();
+        
+        if (_currentTarget.isPickup()) {
+            pickups.add(_currentTarget);
+        }
+        
+        for (FloorStop fs: _nextTargets) {
+            if (fs.isPickup()) {
+                pickups.add(fs);
+            }
+        }
+        
+        return pickups;
+    }
 
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
@@ -83,6 +105,15 @@ public class ElevatorSchedule {
 
     /* ============================= */
     /* ========== METHODS ========== */
+    
+    public void disable() {
+        disengage();
+        setMotorStuck(true);
+        _currentDirection = MotorState.STATIONARY;
+        _currentTarget = null;
+        _nextDirection = null;
+        _nextTargets = null;
+    }
 
     /** Adds a floor input entry to the elevator schedule
      * @param inputEntry */
@@ -155,6 +186,10 @@ public class ElevatorSchedule {
     
     public int cost(FloorStop stop) {
     	int retValue;
+    	
+    	if (_motorStuck) {
+    	    return -1;
+    	}
 
         if (this._currentDirection == MotorState.STATIONARY) {
             // idle state
@@ -264,6 +299,18 @@ public class ElevatorSchedule {
     private void mergeButtonPresses(FloorStop target, FloorStop existingTarget) {
         for (int i = 0; i < target.buttonPresses().size(); i++) {
             existingTarget.addButtonPress(target.buttonPresses().get(i));
+        }
+    }
+    
+    public String statusString() {
+        if (_motorStuck) {
+            return "Motor stuck";
+        } else if (_doorStuck) {
+            return "Door stuck";
+        } else if (_isWaitingForJob) {
+            return "Idle";
+        } else {
+            return "Busy";
         }
     }
 
