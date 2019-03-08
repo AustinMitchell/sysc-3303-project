@@ -7,34 +7,15 @@ public class ElevatorMotor {
     public enum MotorState {
         UP,
         DOWN,
-        STATIONARY;
-        
+        STATIONARY,
+        BROKEN;
+
+        private static final MotorState[] VALUES = MotorState.values();
+
         public static MotorState fromOrdinal(int i) {
-            switch(i) {
-            case 0:
-                return UP;
-            case 1:
-                return DOWN;
-            case 2:
-                return STATIONARY;
-            default:
-                return null;
-            }
+            return VALUES[i];
         }
-        
-        @Override
-        public String toString() {
-            switch(this) {
-            case UP:
-                return "UP";
-            case DOWN:
-                return "DOWN";
-            case STATIONARY:
-                return "STATIONARY";
-            default:
-                return "<invalid>";
-            }
-        }
+
     }
 
     /* ===================================== */

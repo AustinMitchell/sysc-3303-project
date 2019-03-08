@@ -6,11 +6,12 @@ import utils.DataQueueBox;
 import utils.message.*;
 
 public class Elevator implements Runnable {
-    public static final int FLOOR_MOVEMENT_TIMEOUT = 2000;
-    public static final int DOOR_MOVEMENT_TIMEOUT = 500;
 
-    private DataBox<byte[]>     _messageOutgoing;
-    private DataQueueBox<byte[]> _messageIncoming;
+    /* ===================================== */
+    /* ========== PRIVATE MEMBERS ========== */
+
+    private DataBox<byte[]>         _messageOutgoing;
+    private DataQueueBox<byte[]>    _messageIncoming;
 
     private Object              _observer;
 
@@ -22,13 +23,35 @@ public class Elevator implements Runnable {
     private ElevatorMotor       _motor;
     private ElevatorButton[]    _buttons;
     private ElevatorLamp[]      _lamps;
-    
-    private boolean				_doorStuckOpenError;
-    private boolean				_doorStuckClosedError;
-    private boolean				_motorStuckError;
+
+    private boolean             _doorStuckOpenError;
+    private boolean             _doorStuckClosedError;
+    private boolean             _motorStuckError;
+
+    /* ======================================= */
+    /* ========== PROTECTED MEMBERS ========== */
+
+
+    /* ==================================== */
+    /* ========== PUBLIC MEMBERS ========== */
+
+    public static final int FLOOR_MOVEMENT_TIMEOUT  = 2000;
+    public static final int DOOR_MOVEMENT_TIMEOUT   = 500;
+    public static final int DOOR_ERROR_TIMEOUT      = 1000;
+
+    /* ============================= */
+    /* ========== SETTERS ========== */
+
+
+
+    /* ============================= */
+    /* ========== GETTERS ========== */
 
     /** Return the state of the elevator's motor */
     public ElevatorMotor.MotorState motorState() { return _motor.motorState(); }
+
+    /* ================================== */
+    /* ========== CONSTRUCTORS ========== */
 
     /**
      * Creates a new Elevator
@@ -48,7 +71,7 @@ public class Elevator implements Runnable {
         _motor          = new ElevatorMotor();
         _buttons        = new ElevatorButton[_numFloors];
         _lamps          = new ElevatorLamp[_numFloors];
-        
+
         _report         = "";
 
         for (int i=0; i<_numFloors; i++) {
@@ -58,15 +81,18 @@ public class Elevator implements Runnable {
         }
     }
 
+    /* ============================= */
+    /* ========== METHODS ========== */
+
     private void appendReport(String s, Object... args) {
         _report += String.format(s + "\n", args);
     }
-    
+
     private void printReport() {
         System.out.println(_report);
         _report = "";
     }
-    
+
     @Override
     public void run() {
         byte[] message;
@@ -90,14 +116,14 @@ public class Elevator implements Runnable {
                 handleSchedulerDestinationRequest(new SchedulerDestinationRequest(message));
                 break;
             case ERROR_INPUT_ENTRY:
-            	appendReport("Recieved new ErrorInputEntry");
-            	handleErrorInputEntry(new ErrorInputEntry(message));
+                appendReport("Recieved new ErrorInputEntry");
+                handleErrorInputEntry(new ErrorInputEntry(message));
             default:
                 break;
             }
-            
+
             appendReport(String.format("Motor state: %s", _motor.motorState()));
-            
+
             printReport();
         }
 
@@ -138,17 +164,24 @@ public class Elevator implements Runnable {
     private void handleContinueResponse(ElevatorContinueResponse continueResponse) {
         // Checks if the car needs to stop or not
         if (continueResponse.response() == -1) {
-            appendReport("Elevator is set to continue");
-            // Simulates the time the elevator would take to move to a new floor
-            try {
-                Thread.sleep(FLOOR_MOVEMENT_TIMEOUT);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (this._motorStuckError) {
+                appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d motor is stuck", this._carID);
+                this._motor.setMotorState(MotorState.BROKEN);
+                putOutgoingMessage(new ElevatorError(SystemFault.ELEVATOR_STUCK, this._carID).toBytes());
             }
+            else {
+                appendReport("Elevator is set to continue");
+                // Simulates the time the elevator would take to move to a new floor
+                try {
+                    Thread.sleep(FLOOR_MOVEMENT_TIMEOUT);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-            // Emulating an elevator sensor. Request whether to stop or continue
-            appendReport("Sending new ElevatorContinueRequest");
-            putOutgoingMessage(new ElevatorContinueRequest(_carID, _motor.motorState()).toBytes());
+                // Emulating an elevator sensor. Request whether to stop or continue
+                appendReport("Sending new ElevatorContinueRequest");
+                putOutgoingMessage(new ElevatorContinueRequest(_carID, _motor.motorState()).toBytes());
+            }
 
         } else {
             appendReport("Elevator has been requested to stop");
@@ -157,12 +190,25 @@ public class Elevator implements Runnable {
             // Turn off the lamp for this floor
             _lamps[continueResponse.response()].turnOFF();
 
+            // Check if the door is stuck closed and resolve the error
+            if (this._doorStuckClosedError) {
+                appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d doors stuck closed, attempting to resolve fault", this._carID);
+                putOutgoingMessage(new ElevatorError(SystemFault.DOOR_STUCK_CLOSED, this._carID).toBytes());
+                try {
+                    Thread.sleep(DOOR_ERROR_TIMEOUT);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                appendReport("ELEVATOR %d resolved door stuck fault", this._carID);
+            }
+
             // Open doors
             try {
                 Thread.sleep(DOOR_MOVEMENT_TIMEOUT);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            appendReport("ELEVATOR %d door has opened", this._carID);
             _door.openDoor();
         }
     }
@@ -174,33 +220,46 @@ public class Elevator implements Runnable {
             putOutgoingMessage(new ElevatorButtonPushEvent(_carID, destinationRequest.destinationFloor(i)).toBytes());
         }
 
+        // Check if the door is stuck open and resolve the error
+        if (this._doorStuckOpenError) {
+            appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d doors stuck open, attempting to resolve fault", this._carID);
+            putOutgoingMessage(new ElevatorError(SystemFault.DOOR_STUCK_OPEN, this._carID).toBytes());
+            try {
+                Thread.sleep(DOOR_ERROR_TIMEOUT);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            appendReport("ELEVATOR %d resolved door stuck fault", this._carID);
+        }
+
         // Close doors
         try {
             Thread.sleep(DOOR_MOVEMENT_TIMEOUT);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        appendReport("ELEVATOR %d door has closed", this._carID);
         _door.closeDoor();
 
         // Requests for a new action
         appendReport("Sending new ElevatorActionRequest");
         putOutgoingMessage(new ElevatorActionRequest(_carID).toBytes());
     }
-    
+
     private void handleErrorInputEntry(ErrorInputEntry error) {
-    	appendReport("Elevator encountered an error: %s", error.faultType());
-    	switch(error.faultType()) {
-    	case DOOR_STUCK_CLOSED:
-    		_doorStuckClosedError = true;
-    		break;
-    	case DOOR_STUCK_OPEN:
-    		_doorStuckOpenError = true;
-    		break;
-    	case ELEVATOR_STUCK:
-    		_motorStuckError = true;
-    		break;
-    	default:
-    		break;
-    	}
+        appendReport("Elevator encountered an error: %s", error.faultType());
+        switch(error.faultType()) {
+        case DOOR_STUCK_CLOSED:
+            _doorStuckClosedError = true;
+            break;
+        case DOOR_STUCK_OPEN:
+            _doorStuckOpenError = true;
+            break;
+        case ELEVATOR_STUCK:
+            _motorStuckError = true;
+            break;
+        default:
+            break;
+        }
     }
 }

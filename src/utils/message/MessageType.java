@@ -13,8 +13,8 @@ public enum MessageType {
     ERROR_INPUT_ENTRY,
     ELEVATOR_ERROR;
 
-	private static final MessageType[] VALUES = MessageType.values();
-	
+    private static final MessageType[] VALUES = MessageType.values();
+
     public static MessageType fromOrdinal(int i) {
         return VALUES[i];
     }

@@ -7,7 +7,7 @@ public class ElevatorError {
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
-	private int 			_count;
+    private int             _count;
     private SystemFault     _faultType;
     private int             _elevatorNumber;
 
@@ -59,6 +59,13 @@ public class ElevatorError {
 
         this._elevatorNumber    = buffer.get();
         this._faultType         = SystemFault.fromOrdinal(buffer.get());
+    }
+
+    public ElevatorError(SystemFault faultType, int elevatorNumber) {
+        this._count             = Counter.next();
+
+        this._faultType         = faultType;
+        this._elevatorNumber    = elevatorNumber;
     }
 
     /* ============================= */
