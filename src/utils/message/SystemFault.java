@@ -26,7 +26,7 @@ public enum SystemFault {
         case DOOR_STUCK_OPEN:
             return "DOOR_STUCK_OPEN";
         case DOOR_STUCK_CLOSED:
-            return "DOOR_STUCK_OPEN";
+            return "DOOR_STUCK_CLOSED";
 
         default:
             return "<invalid>";
