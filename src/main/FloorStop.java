@@ -45,6 +45,8 @@ public class FloorStop {
     public List<Integer>  buttonPresses() {
         return this._buttonPresses;
     }
+    
+    public boolean isPickup() { return !_buttonPresses.isEmpty(); }
 
     /**
      * Retrieves the button presses for the floor stop

@@ -22,6 +22,10 @@ public class Elevator implements Runnable {
     private ElevatorMotor       _motor;
     private ElevatorButton[]    _buttons;
     private ElevatorLamp[]      _lamps;
+    
+    private boolean				_doorStuckOpenError;
+    private boolean				_doorStuckClosedError;
+    private boolean				_motorStuckError;
 
     /** Return the state of the elevator's motor */
     public ElevatorMotor.MotorState motorState() { return _motor.motorState(); }
@@ -29,7 +33,7 @@ public class Elevator implements Runnable {
     /**
      * Creates a new Elevator
      * @param observer      Object which will be notified when messages come out of the Elevator
-     * @param numFloors     Number of floors to accomodate
+     * @param numFloors     Number of floors to accommodate
      * @param carID         ID of this car, used for message construction
      */
     public Elevator(Object observer, int numFloors, int carID) {
@@ -54,9 +58,8 @@ public class Elevator implements Runnable {
         }
     }
 
-    private void appendReport(String s) {
-        _report += s;
-        _report += "\n";
+    private void appendReport(String s, Object... args) {
+        _report += String.format(s + "\n", args);
     }
     
     private void printReport() {
@@ -71,21 +74,24 @@ public class Elevator implements Runnable {
             message = _messageIncoming.getWhenNotEmpty();
 
             appendReport("--------------------------------------");
-            appendReport(String.format("ELEVATOR %d Recieved new message: %s", _carID, Message.bytesToString(message)));
+            appendReport("ELEVATOR %d Recieved new message: %s", _carID, Message.bytesToString(message));
 
             switch(MessageType.fromOrdinal(message[0])) {
             case ELEVATOR_ACTION_RESPONSE:
-                appendReport(String.format("Recieved new ElevatorActionResponse"));
+                appendReport("Recieved new ElevatorActionResponse");
                 handleActionResponse(new ElevatorActionResponse(message));
                 break;
             case ELEVATOR_CONTINUE_RESPONSE:
-                appendReport(String.format("Recieved new ElevatorContinueResponse"));
+                appendReport("Recieved new ElevatorContinueResponse");
                 handleContinueResponse(new ElevatorContinueResponse(message));
                 break;
             case SCHEDULER_DESTINATION_REQUEST:
-                appendReport(String.format("Recieved new SchedulerDestinationRequest"));
+                appendReport("Recieved new SchedulerDestinationRequest");
                 handleSchedulerDestinationRequest(new SchedulerDestinationRequest(message));
                 break;
+            case ERROR_INPUT_ENTRY:
+            	appendReport("Recieved new ErrorInputEntry");
+            	handleErrorInputEntry(new ErrorInputEntry(message));
             default:
                 break;
             }
@@ -110,7 +116,7 @@ public class Elevator implements Runnable {
 
     // Puts a new message into the outgoing box and lets the observer know about it
     private void putOutgoingMessage(byte[] message) {
-        appendReport(String.format("Sending raw message: %s", Message.bytesToString(message)));
+        appendReport("Sending raw message: %s", Message.bytesToString(message));
         synchronized(_observer) {
             _messageOutgoing.putWhenEmpty(message);
             _observer.notifyAll();
@@ -119,11 +125,11 @@ public class Elevator implements Runnable {
 
     // Handles a ElevatorActionResponse message object
     private void handleActionResponse(ElevatorActionResponse actionResponse) {
-        appendReport(String.format("Setting motor state to %s", actionResponse.action()));
+        appendReport("Setting motor state to %s", actionResponse.action());
         _motor.setMotorState(actionResponse.action());
         if (actionResponse.takeAction()) {
             // Emulating an elevator sensor. Request whether to stop or continue
-            appendReport(String.format("Sending new ElevatorContinueRequest"));
+            appendReport("Sending new ElevatorContinueRequest");
             putOutgoingMessage(new ElevatorContinueRequest(_carID, MotorState.STATIONARY).toBytes());
 
         }
@@ -132,7 +138,7 @@ public class Elevator implements Runnable {
     private void handleContinueResponse(ElevatorContinueResponse continueResponse) {
         // Checks if the car needs to stop or not
         if (continueResponse.response() == -1) {
-            appendReport(String.format("Elevator is set to continue"));
+            appendReport("Elevator is set to continue");
             // Simulates the time the elevator would take to move to a new floor
             try {
                 Thread.sleep(FLOOR_MOVEMENT_TIMEOUT);
@@ -141,11 +147,11 @@ public class Elevator implements Runnable {
             }
 
             // Emulating an elevator sensor. Request whether to stop or continue
-            appendReport(String.format("Sending new ElevatorContinueRequest"));
+            appendReport("Sending new ElevatorContinueRequest");
             putOutgoingMessage(new ElevatorContinueRequest(_carID, _motor.motorState()).toBytes());
 
         } else {
-            appendReport(String.format("Elevator has been requested to stop"));
+            appendReport("Elevator has been requested to stop");
             // Stop elevator
             _motor.setMotorState(ElevatorMotor.MotorState.STATIONARY);
             // Turn off the lamp for this floor
@@ -164,7 +170,7 @@ public class Elevator implements Runnable {
     private void handleSchedulerDestinationRequest(SchedulerDestinationRequest destinationRequest) {
         // Sends out each floor as a separate button push event
         for(int i=0; i<destinationRequest.destinationFloorCount(); i++) {
-            appendReport(String.format("Sending button %d push event", destinationRequest.destinationFloor(i)));
+            appendReport("Sending button %d push event", destinationRequest.destinationFloor(i));
             putOutgoingMessage(new ElevatorButtonPushEvent(_carID, destinationRequest.destinationFloor(i)).toBytes());
         }
 
@@ -177,7 +183,24 @@ public class Elevator implements Runnable {
         _door.closeDoor();
 
         // Requests for a new action
-        appendReport(String.format("Sending new ElevatorActionRequest"));
+        appendReport("Sending new ElevatorActionRequest");
         putOutgoingMessage(new ElevatorActionRequest(_carID).toBytes());
+    }
+    
+    private void handleErrorInputEntry(ErrorInputEntry error) {
+    	appendReport("Elevator encountered an error: %s", error.faultType());
+    	switch(error.faultType()) {
+    	case DOOR_STUCK_CLOSED:
+    		_doorStuckClosedError = true;
+    		break;
+    	case DOOR_STUCK_OPEN:
+    		_doorStuckOpenError = true;
+    		break;
+    	case ELEVATOR_STUCK:
+    		_motorStuckError = true;
+    		break;
+    	default:
+    		break;
+    	}
     }
 }

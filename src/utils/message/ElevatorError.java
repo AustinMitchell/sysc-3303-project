@@ -2,11 +2,12 @@ package utils.message;
 
 import java.nio.ByteBuffer;
 
-public class ErrorInputEntry extends InputEntry {
+public class ElevatorError {
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
 
+	private int 			_count;
     private SystemFault     _faultType;
     private int             _elevatorNumber;
 
@@ -17,7 +18,7 @@ public class ErrorInputEntry extends InputEntry {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-    public static final MessageType MESSAGE_TYPE = MessageType.ERROR_INPUT_ENTRY;
+    public static final MessageType MESSAGE_TYPE = MessageType.ELEVATOR_ERROR;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -36,7 +37,7 @@ public class ErrorInputEntry extends InputEntry {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
-    public ErrorInputEntry(String inputLine) {
+    public ElevatorError(String inputLine) {
         _count = Counter.next();
 
         String[] splitLine = inputLine.split(" ");
@@ -45,24 +46,18 @@ public class ErrorInputEntry extends InputEntry {
             throw new RuntimeException("Invalid input: Did not have exactly 4 columns with single spaces between.");
         }
 
-        this._timestamp = new TimeStamp(splitLine[1]);
-
         this._faultType = SystemFault.fromOrdinal(Integer.parseInt(splitLine[2]));
 
         this._elevatorNumber = Integer.parseInt(splitLine[3]);
     }
 
-    public ErrorInputEntry(byte[] inputData) {
+    public ElevatorError(byte[] inputData) {
         MESSAGE_TYPE.verifyMessage(inputData);
         ByteBuffer buffer       = (ByteBuffer) ByteBuffer.wrap(inputData).position(1);
 
         this._count             = buffer.getInt();
+
         this._elevatorNumber    = buffer.get();
-
-        byte[] timeStamp        = new byte[5];
-        buffer.get(timeStamp);
-        this._timestamp         = new TimeStamp(timeStamp);
-
         this._faultType         = SystemFault.fromOrdinal(buffer.get());
     }
 
@@ -73,17 +68,14 @@ public class ErrorInputEntry extends InputEntry {
      * Returns the entry as an array of bytes. Order:
      *      1 byte message type
      *      4 bytes count
-     *      5 bytes timestamp
      *      1 byte fault type
      *      1 byte elevator number
      */
-    @Override
     public byte[] toBytes() {
-        return ByteBuffer.allocate(12)
+        return ByteBuffer.allocate(7)
                 .put((byte)MESSAGE_TYPE.ordinal())
                 .putInt(this._count)
                 .put((byte)this._elevatorNumber)
-                .put(this._timestamp.toBytes())
                 .put((byte)this._faultType.ordinal())
                 .array();
     }
@@ -93,9 +85,7 @@ public class ErrorInputEntry extends InputEntry {
      */
     @Override
     public String toString() {
-        return String.format("Timestamp: %s, Fault Type: %s, Elevator Number: %d", this._timestamp.toString(),
-                                                                                   this._faultType.toString(),
-                                                                                   this._elevatorNumber);
+        return String.format("Fault Type: %s, Elevator Number: %d", this._faultType.toString(), this._elevatorNumber);
     }
 
 }

@@ -10,29 +10,13 @@ public enum MessageType {
     ELEVATOR_CONTINUE_REQUEST,
     SCHEDULER_DESTINATION_REQUEST,
     ELEVATOR_BUTTON_PUSH_EVENT,
-    ERROR_INPUT_ENTRY;
+    ERROR_INPUT_ENTRY,
+    ELEVATOR_ERROR;
 
+	private static final MessageType[] VALUES = MessageType.values();
+	
     public static MessageType fromOrdinal(int i) {
-        switch(i) {
-        case 0:
-            return FLOOR_INPUT_ENTRY;
-        case 1:
-            return ELEVATOR_ACTION_RESPONSE;
-        case 2:
-            return ELEVATOR_ACTION_REQUEST;
-        case 3:
-            return ELEVATOR_CONTINUE_RESPONSE;
-        case 4:
-            return ELEVATOR_CONTINUE_REQUEST;
-        case 5:
-            return SCHEDULER_DESTINATION_REQUEST;
-        case 6:
-            return ELEVATOR_BUTTON_PUSH_EVENT;
-        case 7:
-            return ERROR_INPUT_ENTRY;
-        default:
-            return null;
-        }
+        return VALUES[i];
     }
 
     public void verifyMessage(byte[] data) {

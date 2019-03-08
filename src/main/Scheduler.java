@@ -13,6 +13,7 @@ import utils.message.ElevatorActionResponse;
 import utils.message.ElevatorButtonPushEvent;
 import utils.message.ElevatorContinueRequest;
 import utils.message.ElevatorContinueResponse;
+import utils.message.ErrorInputEntry;
 import utils.message.FloorInputEntry;
 import utils.message.Message;
 import utils.message.SchedulerDestinationRequest;
@@ -199,6 +200,9 @@ public class Scheduler {
             case FLOOR_INPUT_ENTRY:
                 handleFloorInputEntry(new FloorInputEntry(message));
                 break;
+            case ERROR_INPUT_ENTRY:
+            	handleErrorInputEntry(new ErrorInputEntry(message));
+            	break;
             case ELEVATOR_ACTION_REQUEST:
                 handleElevatorActionRequest(new ElevatorActionRequest(message));
                 break;
@@ -283,6 +287,10 @@ public class Scheduler {
 
 
         }
+    }
+    
+    public void handleErrorInputEntry(ErrorInputEntry error) {
+    	sendMessageToElevator(error.toBytes());
     }
 
     public void handleElevatorActionRequest(ElevatorActionRequest request) {
