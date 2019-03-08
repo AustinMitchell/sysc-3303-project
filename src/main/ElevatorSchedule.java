@@ -225,8 +225,9 @@ public class ElevatorSchedule {
                 } else {
 
                     // Determine if we need to swap the current target and new target
-                    if (((this._nextDirection == MotorState.UP) && (this._currentTarget.target() > newTarget.target()))
-                            || ((this._nextDirection == MotorState.DOWN) && (this._currentTarget.target() < newTarget.target()))) {
+                    if ((((this._nextDirection == MotorState.UP) && (this._currentTarget.target() > newTarget.target()))
+                            || ((this._nextDirection == MotorState.DOWN) && (this._currentTarget.target() < newTarget.target())))
+                            && this._currentTarget.isPickup()) {
 
                         this._nextTargets.add(0, this._currentTarget);
                         this._currentTarget = newTarget;
