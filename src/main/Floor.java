@@ -12,7 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 import network.socket.ClientSocket;
 import utils.ResLoader;
+import utils.message.ErrorInputEntry;
 import utils.message.FloorInputEntry;
+import utils.message.InputEntry;
 import utils.message.Message;
 
 public class Floor {
@@ -71,12 +73,23 @@ public class Floor {
         _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_FLOORS});
 
         // Read the input file and establish a stack of entries
-        List<FloorInputEntry> entryList = new ArrayList<>();
+        List<InputEntry> entryList = new ArrayList<>();
         BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
 
         for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
-            FloorInputEntry newEntry = new FloorInputEntry(line);
-            entryList.add(newEntry);
+
+            switch (line.charAt(0)) {
+            case '0':
+                entryList.add(new FloorInputEntry(line));
+                break;
+            case '1':
+                entryList.add(new ErrorInputEntry(line));
+                break;
+
+            default:
+                break;
+            }
+
         }
 
         // Sort the list of entries to ensure that the times are in order and log it
@@ -89,8 +102,8 @@ public class Floor {
         }
         else {
             for (int i = 0; i < entryList.size() - 1; i++) {
-                FloorInputEntry currentEntry = entryList.get(i);
-                FloorInputEntry nextEntry = entryList.get(i + 1);
+                InputEntry currentEntry = entryList.get(i);
+                InputEntry nextEntry = entryList.get(i + 1);
 
                 int delay = nextEntry.differenceInMilliseconds(currentEntry);
 
@@ -111,7 +124,7 @@ public class Floor {
      *
      * @param list
      */
-    private void printList(List<FloorInputEntry> list) {
+    private void printList(List<InputEntry> list) {
         System.out.println("===== Floor entry list:");
 
         for (int i = 0; i < list.size(); i++) {
@@ -126,7 +139,7 @@ public class Floor {
      *
      * @param entry
      */
-    private void sendEntryToScheduler(FloorInputEntry entry) {
+    private void sendEntryToScheduler(InputEntry entry) {
         System.out.println();
         System.out.println(String.format("Sending out new entry to Scheduler: %s", entry));
 
