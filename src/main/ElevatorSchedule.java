@@ -112,7 +112,7 @@ public class ElevatorSchedule {
         _currentDirection = MotorState.BROKEN;
         _currentTarget = null;
         _nextDirection = null;
-        _nextTargets = null;
+        _nextTargets.clear();
     }
 
     /** Adds a floor input entry to the elevator schedule
