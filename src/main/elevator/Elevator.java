@@ -192,6 +192,7 @@ public class Elevator implements Runnable {
 
             // Check if the door is stuck closed and resolve the error
             if (this._doorStuckClosedError) {
+                this._doorStuckClosedError = false;
                 appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d doors stuck closed, attempting to resolve fault", this._carID);
                 putOutgoingMessage(new ElevatorError(SystemFault.DOOR_STUCK_CLOSED, this._carID).toBytes());
                 try {
@@ -222,6 +223,7 @@ public class Elevator implements Runnable {
 
         // Check if the door is stuck open and resolve the error
         if (this._doorStuckOpenError) {
+            this._doorStuckOpenError = false;
             appendReport("SYSTEM FAULT DETECTED: ELEVATOR %d doors stuck open, attempting to resolve fault", this._carID);
             putOutgoingMessage(new ElevatorError(SystemFault.DOOR_STUCK_OPEN, this._carID).toBytes());
             try {

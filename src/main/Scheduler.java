@@ -2,6 +2,7 @@ package main;
 
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -366,7 +367,7 @@ public class Scheduler {
                 newRequest.addFloor(button);
             }
 
-            log(" > Sending new SchedulerDestinationRequest to elevator %d with following floors: %s", id, newRequest.destinationsAsArray());
+            log(" > Sending new SchedulerDestinationRequest to elevator %d with following floors: %s", id, Arrays.toString(newRequest.destinationsAsArray()));
             sendMessageToElevator(newRequest.toBytes());
 
         } else {

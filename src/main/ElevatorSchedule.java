@@ -138,6 +138,7 @@ public class ElevatorSchedule {
     public List<Integer> updateCurrentTarget() {
         if ((this._currentTarget != null) && (this._currentFloor == this._currentTarget.target())) {
             if (!this._nextTargets.isEmpty()) {
+                List<Integer> buttonPressesIntegers = this._currentTarget.buttonPresses();
                 this._currentTarget = this._nextTargets.get(0);
                 this._nextTargets.remove(0);
 
@@ -147,7 +148,7 @@ public class ElevatorSchedule {
                     this._currentDirection = this._nextDirection;
                 }
 
-                return this._currentTarget.buttonPresses();
+                return buttonPressesIntegers;
             } else {
 
                 if (this._currentTarget.buttonPresses().isEmpty()) {
@@ -211,8 +212,10 @@ public class ElevatorSchedule {
 
         } else {
             // Going to a request who has the opposite direction
-            if (stop.direction() != this._nextDirection) {
-                // Reject if it's in the opposite direction
+            if (stop.direction() != this._nextDirection
+                    || ((this._nextDirection == MotorState.UP)   && (stop.target() < this._currentTarget.target()))
+                    || ((this._nextDirection == MotorState.DOWN) && (stop.target() > this._currentTarget.target()))) {
+                // Reject if it's in the opposite direction or if the request is beyond its current target
                 return -1;
             }
             retValue = Math.abs(this._currentFloor - _currentTarget.target()) + Math.abs(_currentTarget.target() - stop.target());
@@ -260,9 +263,8 @@ public class ElevatorSchedule {
                 } else {
 
                     // Determine if we need to swap the current target and new target
-                    if ((((this._nextDirection == MotorState.UP) && (this._currentTarget.target() > newTarget.target()))
-                            || ((this._nextDirection == MotorState.DOWN) && (this._currentTarget.target() < newTarget.target())))
-                            && this._currentTarget.isPickup()) {
+                    if (((this._nextDirection == MotorState.UP) && (this._currentTarget.target() > newTarget.target()))
+                            || ((this._nextDirection == MotorState.DOWN) && (this._currentTarget.target() < newTarget.target()))) {
 
                         this._nextTargets.add(0, this._currentTarget);
                         this._currentTarget = newTarget;
