@@ -9,7 +9,8 @@ public enum MessageType {
     ELEVATOR_CONTINUE_RESPONSE,
     ELEVATOR_CONTINUE_REQUEST,
     SCHEDULER_DESTINATION_REQUEST,
-    ELEVATOR_BUTTON_PUSH_EVENT;
+    ELEVATOR_BUTTON_PUSH_EVENT,
+    ERROR_INPUT_ENTRY;
 
     public static MessageType fromOrdinal(int i) {
         switch(i) {
@@ -27,6 +28,8 @@ public enum MessageType {
             return SCHEDULER_DESTINATION_REQUEST;
         case 6:
             return ELEVATOR_BUTTON_PUSH_EVENT;
+        case 7:
+            return ERROR_INPUT_ENTRY;
         default:
             return null;
         }

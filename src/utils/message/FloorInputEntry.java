@@ -2,19 +2,32 @@ package utils.message;
 
 import java.nio.ByteBuffer;
 
-public class FloorInputEntry implements Comparable<FloorInputEntry> {
-    public static final MessageType MESSAGE_TYPE = MessageType.FLOOR_INPUT_ENTRY;
+public class FloorInputEntry extends InputEntry {
 
-    private int         _count;
-    private TimeStamp   _timestamp;
+    /* ===================================== */
+    /* ========== PRIVATE MEMBERS ========== */
+
     private byte        _floor;
     private Direction   _direction;
     private byte        _destination;
 
+    /* ======================================= */
+    /* ========== PROTECTED MEMBERS ========== */
 
-    public int          messageCount()  { return _count; }
-    /** Returns timestamp from entry */
-    public TimeStamp    timestamp()     { return _timestamp; }
+
+    /* ==================================== */
+    /* ========== PUBLIC MEMBERS ========== */
+
+    public static final MessageType MESSAGE_TYPE = MessageType.FLOOR_INPUT_ENTRY;
+
+    /* ============================= */
+    /* ========== SETTERS ========== */
+
+
+
+    /* ============================= */
+    /* ========== GETTERS ========== */
+
     /** Returns floor selection from entry */
     public int          floor()         { return _floor; }
     /** Returns selected direction from entry */
@@ -22,21 +35,24 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
     /** Returns car selection from entry */
     public int          destination()   { return _destination; }
 
+    /* ================================== */
+    /* ========== CONSTRUCTORS ========== */
+
     /** Creates an entry from a line in the input file */
     public FloorInputEntry(String inputLine) {
         _count = Counter.next();
 
         String[] splitLine = inputLine.split(" ");
 
-        if (splitLine.length != 4) {
-            throw new RuntimeException("Invalid input: Did not have exactly 4 columns with single spaces between.");
+        if (splitLine.length != 5) {
+            throw new RuntimeException("Invalid input: Did not have exactly 5 columns with single spaces between.");
         }
 
-        _timestamp = new TimeStamp(splitLine[0]);
+        _timestamp = new TimeStamp(splitLine[1]);
 
-        _floor = (byte)Integer.parseInt(splitLine[1]);
+        _floor = (byte)Integer.parseInt(splitLine[2]);
 
-        switch(splitLine[2].toUpperCase()) {
+        switch(splitLine[3].toUpperCase()) {
         case "UP":
             _direction = Direction.UP;
             break;
@@ -47,7 +63,7 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
             throw new RuntimeException("Invalid input in column 3: Did not match 'Up' or 'Down', case insensitive");
         }
 
-        _destination = (byte)Integer.parseInt(splitLine[3]);
+        _destination = (byte)Integer.parseInt(splitLine[4]);
     }
 
     /** Creates a new FloorInputEntry from a byte array. Only considers the first 9 bytes */
@@ -66,6 +82,9 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
         _destination    = buffer.get();
     }
 
+    /* ============================= */
+    /* ========== METHODS ========== */
+
     @Override
     public String toString() {
         return String.format("Timestamp: %s, Floor: %d, Direction: %s, Destination: %d", _timestamp.toString(), _floor, _direction, _destination);
@@ -83,20 +102,4 @@ public class FloorInputEntry implements Comparable<FloorInputEntry> {
                 .array();
     }
 
-    /**
-     * Calculates the difference between self and another entry and returns the
-     * result in milliseconds
-     *
-     * @param entry
-     * @return difference in milliseconds
-     */
-    public int differenceInMilliseconds(FloorInputEntry entry) {
-        return this._timestamp.toMilliseconds() - entry.timestamp().toMilliseconds();
-    }
-
-    /** Compares the timestamps of this entry and another entry. Earlier timestamps are considered "less than" later timestamps. */
-    @Override
-    public int compareTo(FloorInputEntry other) {
-        return this._timestamp.compareTo(other._timestamp);
-    }
 }
