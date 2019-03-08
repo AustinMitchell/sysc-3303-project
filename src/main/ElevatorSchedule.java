@@ -109,7 +109,7 @@ public class ElevatorSchedule {
     public void disable() {
         disengage();
         setMotorStuck(true);
-        _currentDirection = MotorState.STATIONARY;
+        _currentDirection = MotorState.BROKEN;
         _currentTarget = null;
         _nextDirection = null;
         _nextTargets = null;
