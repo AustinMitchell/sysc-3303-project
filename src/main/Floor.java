@@ -33,7 +33,8 @@ public class Floor {
     /* ========== PUBLIC MEMBERS ========== */
 
     public static final String  INPUT_FILE_PATH     = "floor_input.in";
-    public static final int     NUMBER_OF_FLOORS    = 10;
+    public static final int     NUMBER_OF_FLOORS    = 22;
+    public static final String  SCHEDULER_IP        = "localhost";
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -52,7 +53,7 @@ public class Floor {
      * @throws SocketException
      */
     public Floor() throws UnknownHostException, SocketException{
-        _schedulerSocket = new ClientSocket(this, "localhost", Scheduler.PORT_FLOOR);
+        _schedulerSocket = new ClientSocket(this, SCHEDULER_IP, Scheduler.PORT_FLOOR);
     }
 
     /* ============================= */
