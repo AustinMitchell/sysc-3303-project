@@ -50,6 +50,7 @@ public class Timer {
             sb.append("\n");
             try {
                 _writer.append(sb.toString());
+                _writer.flush();
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(String.format("Could not write to '%s'", _filename));

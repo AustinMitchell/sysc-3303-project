@@ -8,6 +8,7 @@ import java.util.List;
 
 import main.elevator.ElevatorMotor;
 import network.socket.ServerSocket;
+import utils.Timer;
 import utils.WorkerThread;
 import utils.message.ElevatorActionRequest;
 import utils.message.ElevatorActionResponse;
@@ -55,6 +56,10 @@ public class Scheduler {
     private ElevatorSchedule[] _elevatorSchedules;
 
     private boolean _loggingEnabled;
+    
+    private Timer   _arrivalSensorTimer;
+    private Timer   _elevatorButtonTimer;
+    private Timer   _floorButtonTimer;
 
 
     /* ======================================= */
@@ -93,6 +98,10 @@ public class Scheduler {
         _floorStops = new LinkedList<>();
 
         _loggingEnabled = true;
+        
+        _arrivalSensorTimer     = new Timer("bin/arrival_sensor.out");
+        _elevatorButtonTimer    = new Timer("bin/elevator_button.out");
+        _floorButtonTimer       = new Timer("bin/floor_button.out");
     }
 
     /* ============================= */
@@ -200,7 +209,9 @@ public class Scheduler {
 
         switch (messageWrap.messageType()) {
             case FLOOR_INPUT_ENTRY:
+                _floorButtonTimer.start();
                 handleFloorInputEntry(new FloorInputEntry(message));
+                _floorButtonTimer.stop();
                 break;
 
             case ERROR_INPUT_ENTRY:
@@ -211,11 +222,15 @@ public class Scheduler {
                 break;
 
             case ELEVATOR_CONTINUE_REQUEST:
+                _arrivalSensorTimer.start();
                 handleElevatorContinueRequest(new ElevatorContinueRequest(message));
+                _arrivalSensorTimer.stop();
                 break;
 
             case ELEVATOR_BUTTON_PUSH_EVENT:
+                _elevatorButtonTimer.start();
                 handleElevatorButtonPushEvent(new ElevatorButtonPushEvent(message));
+                _elevatorButtonTimer.stop();
                 break;
 
             case ELEVATOR_ERROR:
