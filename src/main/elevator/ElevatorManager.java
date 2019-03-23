@@ -1,7 +1,6 @@
 package main.elevator;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -15,7 +14,6 @@ public class ElevatorManager {
     /* ========== PRIVATE MEMBERS ========== */
 
     private ClientSocket _schedulerSocket;
-    private InetAddress  _schedulerIP;
     private Elevator[]   _elevators;
 
     /* ======================================= */
@@ -25,7 +23,9 @@ public class ElevatorManager {
     /* ==================================== */
     /* ========== PUBLIC MEMBERS ========== */
 
-    public static final int NUMBER_OF_ELEVATORS = 2;
+    public static final int NUMBER_OF_ELEVATORS = 4;
+
+    public static final String SCHEDULER_IP = "localhost";
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -40,14 +40,6 @@ public class ElevatorManager {
 
     /** Constructor that uses localhost as the Scheduler IP */
     public ElevatorManager() {
-        // Initialize the scheduler IP address to the local host
-        try {
-            _schedulerIP = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
         _elevators = new Elevator[NUMBER_OF_ELEVATORS];
 
         // Initialize the scheduler socket
@@ -57,13 +49,6 @@ public class ElevatorManager {
     /** Constructor that receives the Scheduler IP
      * @param IPAddress */
     public ElevatorManager(String IPAddress) {
-        // Initialize the scheduler IP to the passed IP address
-        try {
-            _schedulerIP = InetAddress.getByName(IPAddress);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
 
         _elevators = new Elevator[NUMBER_OF_ELEVATORS];
 
@@ -77,10 +62,12 @@ public class ElevatorManager {
     /** Method to set up the scheduler socket */
     private void initializeSchedulerSocket() {
         try {
-            _schedulerSocket = new ClientSocket(this, _schedulerIP, Scheduler.PORT_ELEVATOR);
+            _schedulerSocket = new ClientSocket(this, SCHEDULER_IP, Scheduler.PORT_ELEVATOR);
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
     }
 
