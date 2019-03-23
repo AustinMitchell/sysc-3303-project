@@ -1,6 +1,6 @@
 =========================================
     
-    SYSC3303 Group Project Iteration 3
+    SYSC3303 Group Project Iteration 4
     Section L2 Group 7
     
     Names:
@@ -20,6 +20,9 @@
         /res/ directory. The floor subsystem will then send the input
         to the scheduler in real time, and the scheduler will command
         the elevator based on this input.
+		
+		Log files for how long certain processes took to complete get
+		outputted to the /bin directory. The time is in nanoseconds.
 
     ===== Test Files:
         All important data classes are unit tested. There is a unit test
@@ -40,12 +43,10 @@
 
     ===== Breakdown of Responsibilities:
         Troy Havelock:
-            - Rearchitectured floor subsystem
             - Created new diagram
 
         Austin Mitchell:
-            - ElevatorSchedule & Scheduler updates
-            - Fix runtime bugs
+			- Added Timer class to measure scheduler
 
         All Team Members:
             - Worked together continuously at each step of the project
