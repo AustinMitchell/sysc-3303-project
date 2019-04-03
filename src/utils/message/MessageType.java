@@ -11,7 +11,8 @@ public enum MessageType {
     SCHEDULER_DESTINATION_REQUEST,
     ELEVATOR_BUTTON_PUSH_EVENT,
     ERROR_INPUT_ENTRY,
-    ELEVATOR_ERROR;
+    ELEVATOR_ERROR,
+    ELEVATOR_SCHEDULE_UPDATE;
 
     private static final MessageType[] VALUES = MessageType.values();
 
