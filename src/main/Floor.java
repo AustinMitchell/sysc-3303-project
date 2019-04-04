@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import gui.ElevatorGUI;
 import network.socket.ClientSocket;
 import utils.ResLoader;
 import utils.message.ErrorInputEntry;
@@ -77,6 +78,8 @@ public class Floor {
         List<InputEntry> entryList = new ArrayList<>();
         BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
 
+        ElevatorGUI.start(new ElevatorGUI(), "Elevator GUI");
+        
         for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
 
             switch (line.charAt(0)) {

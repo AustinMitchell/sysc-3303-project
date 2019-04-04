@@ -56,9 +56,9 @@ public class ElevatorSchedule {
     public void setCanStopCurrentFloor(boolean canStop) { _canStopCurrentFloor = canStop; }
 
     public void disengage() { _isWaitingForJob = true; }
-    
+
     public void setDoorStuck(boolean stuck) { _doorStuck = stuck; }
-    
+
     public void setMotorStuck(boolean stuck) { _motorStuck = stuck; }
 
     /* ============================= */
@@ -73,22 +73,30 @@ public class ElevatorSchedule {
     public MotorState currentDirection() { return this._currentDirection; }
 
     public MotorState nextDirection() { return this._nextDirection; }
-    
+
     public List<FloorStop> allPickupRequests() {
         List<FloorStop> pickups = new ArrayList<>();
-        
+
         if (_currentTarget.isPickup()) {
             pickups.add(_currentTarget);
         }
-        
+
         for (FloorStop fs: _nextTargets) {
             if (fs.isPickup()) {
                 pickups.add(fs);
             }
         }
-        
+
         return pickups;
     }
+
+    public List<FloorStop> nextTargets() {
+        return this._nextTargets;
+    }
+
+    public boolean doorStuck() { return this._doorStuck; }
+
+    public boolean motorStuck() { return this._motorStuck; }
 
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
@@ -105,7 +113,7 @@ public class ElevatorSchedule {
 
     /* ============================= */
     /* ========== METHODS ========== */
-    
+
     public void disable() {
         disengage();
         setMotorStuck(true);
@@ -120,7 +128,7 @@ public class ElevatorSchedule {
     public void addNewTarget(FloorInputEntry inputEntry) {
     	addNewTarget(new FloorStop(inputEntry));
     }
-    
+
     /** Adds a floor stop to the elevator schedule
      * @param floorStop */
     public void addNewTarget(FloorStop floorStop) {
@@ -184,10 +192,10 @@ public class ElevatorSchedule {
     public int cost(FloorInputEntry entry) {
         return cost(new FloorStop(entry));
     }
-    
+
     public int cost(FloorStop stop) {
     	int retValue;
-    	
+
     	if (_motorStuck) {
     	    return -1;
     	}
@@ -202,7 +210,7 @@ public class ElevatorSchedule {
 
         } else if (this._currentDirection == this._nextDirection) {
             // Going to a request who has the same direction
-            if (((this._currentDirection == MotorState.UP) && (stop.target() < this._currentFloor)) 
+            if (((this._currentDirection == MotorState.UP) && (stop.target() < this._currentFloor))
             		|| ((this._currentDirection == MotorState.DOWN) && (stop.target() > this._currentFloor))
                     || (stop.direction() != this._currentDirection)) {
                 // Reject if you're past the request, or if it's in the opposite direction
@@ -304,7 +312,7 @@ public class ElevatorSchedule {
             existingTarget.addButtonPress(target.buttonPresses().get(i));
         }
     }
-    
+
     public String statusString() {
         if (_motorStuck) {
             return "Motor stuck";
