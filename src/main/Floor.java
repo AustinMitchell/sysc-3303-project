@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import gui.ElevatorGUI;
+//import gui.ElevatorGUI;
 import network.socket.ClientSocket;
 import utils.ResLoader;
 import utils.message.ErrorInputEntry;
@@ -74,53 +74,97 @@ public class Floor {
         // Send the number of floors there are to the Scheduler
         _schedulerSocket.sendMessage(new byte[] {NUMBER_OF_FLOORS});
 
-        // Read the input file and establish a stack of entries
-        List<InputEntry> entryList = new ArrayList<>();
-        BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
+        Floor floorSystem = this;
 
-        ElevatorGUI.start(new ElevatorGUI(), "Elevator GUI");
-        
-        for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
+//        ElevatorGUI.start(new ElevatorGUI(), "Elevator GUI");
 
-            switch (line.charAt(0)) {
-            case '0':
-                entryList.add(new FloorInputEntry(line));
-                break;
-            case '1':
-                entryList.add(new ErrorInputEntry(line));
-                break;
+        new Thread(new Runnable() {
 
-            default:
-                break;
+            @Override
+            public void run() {
+
+                System.out.println("Floor message handler started");
+
+                synchronized (floorSystem) {
+                    while (true) {
+                        while (_schedulerSocket.hasMessage()) {
+                            System.out.println("Received message from scheduler");
+                            Message message = new Message(_schedulerSocket.getMessage());
+                            if (message.bytes() != null) {
+                                // Update the GUI's elevator schedule data
+                            }
+                        }
+
+                        try {
+                            floorSystem.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+
             }
+        }).start();
 
-        }
+        new Thread(new Runnable() {
 
-        // Sort the list of entries to ensure that the times are in order and log it
-        Collections.sort(entryList);
-        printList(entryList);
+            @Override
+            public void run() {
 
-        // Send out the entries to the Scheduler, simulating the time, starting with the first entry
-        if (entryList.size() == 1) {
-            sendEntryToScheduler(entryList.get(0));
-        }
-        else {
-            for (int i = 0; i < entryList.size() - 1; i++) {
-                InputEntry currentEntry = entryList.get(i);
-                InputEntry nextEntry = entryList.get(i + 1);
-
-                int delay = nextEntry.differenceInMilliseconds(currentEntry);
-
-                sendEntryToScheduler(currentEntry);
+             // Read the input file and establish a stack of entries
+                List<InputEntry> entryList = new ArrayList<>();
+                BufferedReader inputFile = new BufferedReader(new InputStreamReader(ResLoader.load(INPUT_FILE_PATH)));
                 try {
-                    TimeUnit.MILLISECONDS.sleep(delay);
-                } catch (InterruptedException e) {
+                    for (String line = inputFile.readLine(); line != null; line = inputFile.readLine()) {
+
+                        switch (line.charAt(0)) {
+                        case '0':
+                            entryList.add(new FloorInputEntry(line));
+                            break;
+                        case '1':
+                            entryList.add(new ErrorInputEntry(line));
+                            break;
+
+                        default:
+                            break;
+                        }
+
+                    }
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
 
-            sendEntryToScheduler(entryList.get(entryList.size()-1));
-        }
+                // Sort the list of entries to ensure that the times are in order and log it
+                Collections.sort(entryList);
+                printList(entryList);
+
+                // Send out the entries to the Scheduler, simulating the time, starting with the first entry
+                if (entryList.size() == 1) {
+                    sendEntryToScheduler(entryList.get(0));
+                }
+                else {
+                    for (int i = 0; i < entryList.size() - 1; i++) {
+                        InputEntry currentEntry = entryList.get(i);
+                        InputEntry nextEntry = entryList.get(i + 1);
+
+                        int delay = nextEntry.differenceInMilliseconds(currentEntry);
+
+                        sendEntryToScheduler(currentEntry);
+                        try {
+//                            TimeUnit.MILLISECONDS.sleep(delay);
+                            Thread.sleep(delay);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    sendEntryToScheduler(entryList.get(entryList.size()-1));
+                }
+            }
+        }).start();
+
+
     }
 
     /**
@@ -163,4 +207,3 @@ public class Floor {
         new Floor().run();
     }
 }
-
