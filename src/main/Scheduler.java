@@ -20,6 +20,7 @@ import utils.message.ElevatorButtonPushEvent;
 import utils.message.ElevatorContinueRequest;
 import utils.message.ElevatorContinueResponse;
 import utils.message.ElevatorError;
+import utils.message.ElevatorScheduleUpdate;
 import utils.message.ErrorInputEntry;
 import utils.message.FloorInputEntry;
 import utils.message.Message;
@@ -70,7 +71,6 @@ public class Scheduler {
     private Timer _arrivalSensorTimer;
     private Timer _elevatorButtonTimer;
     private Timer _floorButtonTimer;
-
 
     /* ======================================= */
     /* ========== PROTECTED MEMBERS ========== */
@@ -201,6 +201,11 @@ public class Scheduler {
         _elevatorSocket.sendMessage(message);
     }
 
+    private void sendMessageToFloor(byte[] message) {
+        log(" > Sending message to floor socket");
+        _floorSocket.sendMessage(message);
+    }
+
     private void log(String message, Object... formatArgs) {
         if (_loggingEnabled) {
             LOG.println(String.format(message, formatArgs));
@@ -316,7 +321,8 @@ public class Scheduler {
                 _elevatorSchedules[bestElevator].addNewTarget(newEntry);
             }
 
-
+            log(" > Sending new ElevatorScheduleUpdate to floor");
+            sendMessageToFloor(new ElevatorScheduleUpdate(bestElevator, _elevatorSchedules[bestElevator]).toBytes());
         }
     }
 
@@ -362,6 +368,9 @@ public class Scheduler {
                 sendMessageToElevator(new ElevatorActionResponse(id, false, ElevatorMotor.MotorState.STATIONARY).toBytes());
                 break;
         }
+
+        log(" > Sending new ElevatorScheduleUpdate to floor");
+        sendMessageToFloor(new ElevatorScheduleUpdate(id, _elevatorSchedules[id]).toBytes());
     }
 
     public void handleElevatorContinueRequest(ElevatorContinueRequest request) {
@@ -398,6 +407,9 @@ public class Scheduler {
             _elevatorSchedules[id].setCanStopCurrentFloor(false);
             sendMessageToElevator(new ElevatorContinueResponse(id, -1).toBytes());
         }
+
+        log(" > Sending new ElevatorScheduleUpdate to floor");
+        sendMessageToFloor(new ElevatorScheduleUpdate(id, _elevatorSchedules[id]).toBytes());
     }
 
     public void handleElevatorButtonPushEvent(ElevatorButtonPushEvent event) {
@@ -408,7 +420,7 @@ public class Scheduler {
     public void handleElevatorError(ElevatorError error) {
         int id = error.elevatorNumber();
 
-        switch (error.faultType()) {
+        switch(error.faultType()) {
             case DOOR_STUCK_CLOSED:
                 log("Door for elevator %d is stuck closed, will resolve and continue", id);
                 _elevatorSchedules[id].setDoorStuck(true);
@@ -431,6 +443,9 @@ public class Scheduler {
                 log("Invalid elevator error");
                 break;
         }
+
+        log(" > Sending new ElevatorScheduleUpdate to floor");
+        sendMessageToFloor(new ElevatorScheduleUpdate(id, _elevatorSchedules[id]).toBytes());
     }
 
     public static void main(String[] args) throws SocketException, UnknownHostException, FileNotFoundException {
