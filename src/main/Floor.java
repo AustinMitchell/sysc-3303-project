@@ -14,10 +14,10 @@ import java.util.Collections;
 import java.util.List;
 
 import gui.ElevatorGUI;
-//import gui.ElevatorGUI;
 import network.socket.ClientSocket;
 import simple.run.SimpleGUIApp;
 import utils.ResLoader;
+import utils.message.ElevatorScheduleUpdate;
 import utils.message.ErrorInputEntry;
 import utils.message.FloorInputEntry;
 import utils.message.InputEntry;
@@ -80,7 +80,8 @@ public class Floor {
 
         Floor floorSystem = this;
 
-        SimpleGUIApp.start(new ElevatorGUI(NUMBER_OF_FLOORS, numElevators), "Elevator GUI");
+        ElevatorGUI gui = new ElevatorGUI(NUMBER_OF_FLOORS, numElevators);
+        SimpleGUIApp.start(gui, "Elevator GUI");
 
         new Thread(new Runnable() {
 
@@ -95,7 +96,13 @@ public class Floor {
                             LOG.println("Received message from scheduler");
                             Message message = new Message(_schedulerSocket.getMessage());
                             if (message.bytes() != null) {
-                                // Update the GUI's elevator schedule data
+                                switch(message.messageType()) {
+                                    case ELEVATOR_SCHEDULE_UPDATE:
+                                        gui.updateSchedule(new ElevatorScheduleUpdate(message.bytes()));
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
 
@@ -157,7 +164,6 @@ public class Floor {
 
                         sendEntryToScheduler(currentEntry);
                         try {
-                            //                            TimeUnit.MILLISECONDS.sleep(delay);
                             Thread.sleep(delay);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
