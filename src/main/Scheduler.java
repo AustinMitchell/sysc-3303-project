@@ -16,6 +16,7 @@ import utils.message.ElevatorButtonPushEvent;
 import utils.message.ElevatorContinueRequest;
 import utils.message.ElevatorContinueResponse;
 import utils.message.ElevatorError;
+import utils.message.ElevatorScheduleUpdate;
 import utils.message.ErrorInputEntry;
 import utils.message.FloorInputEntry;
 import utils.message.Message;
@@ -56,7 +57,7 @@ public class Scheduler {
     private ElevatorSchedule[] _elevatorSchedules;
 
     private boolean _loggingEnabled;
-    
+
     private Timer   _arrivalSensorTimer;
     private Timer   _elevatorButtonTimer;
     private Timer   _floorButtonTimer;
@@ -70,7 +71,7 @@ public class Scheduler {
     /* ========== PUBLIC MEMBERS ========== */
 
     public static final int PORT_FLOOR    = 5000;
-    public static final int PORT_ELEVATOR = 5001;
+    public static final int PORT_ELEVATOR = 5002;
 
     /* ============================= */
     /* ========== SETTERS ========== */
@@ -98,7 +99,7 @@ public class Scheduler {
         _floorStops = new LinkedList<>();
 
         _loggingEnabled = true;
-        
+
         _arrivalSensorTimer     = new Timer("bin/arrival_sensor.out");
         _elevatorButtonTimer    = new Timer("bin/elevator_button.out");
         _floorButtonTimer       = new Timer("bin/floor_button.out");
@@ -192,6 +193,11 @@ public class Scheduler {
         _elevatorSocket.sendMessage(message);
     }
 
+    private void sendMessageToFloor(byte[] message) {
+        log(" > Sending message to floor socket");
+        _floorSocket.sendMessage(message);
+    }
+
     private void log(String message, Object... formatArgs) {
         if (_loggingEnabled) {
             System.out.println(String.format(message, formatArgs));
@@ -236,7 +242,7 @@ public class Scheduler {
             case ELEVATOR_ERROR:
             	handleElevatorError(new ElevatorError(message));
                 break;
-                
+
             default:
                 break;
         }
@@ -307,10 +313,11 @@ public class Scheduler {
                 _elevatorSchedules[bestElevator].addNewTarget(newEntry);
             }
 
-
+            log(" > Sending new ElevatorScheduleUpdate to floor");
+            sendMessageToFloor(new ElevatorScheduleUpdate(bestElevator, _elevatorSchedules[bestElevator]).toBytes());
         }
     }
-    
+
     public void handleErrorInputEntry(ErrorInputEntry error) {
     	sendMessageToElevator(error.toBytes());
     }
@@ -320,7 +327,7 @@ public class Scheduler {
 
         // If it gets to this stage, it's resolved any stuck elevator door issues
         _elevatorSchedules[id].setDoorStuck(false);
-        
+
         // Check the backlog to see if there's a request we can put into the schedule
         int bestEntry = -1;
         int bestCost  = -1;
@@ -355,6 +362,9 @@ public class Scheduler {
                 sendMessageToElevator(new ElevatorActionResponse(id, false, ElevatorMotor.MotorState.STATIONARY).toBytes());
                 break;
         }
+
+        log(" > Sending new ElevatorScheduleUpdate to floor");
+        sendMessageToFloor(new ElevatorScheduleUpdate(id, _elevatorSchedules[id]).toBytes());
     }
 
     public void handleElevatorContinueRequest(ElevatorContinueRequest request) {
@@ -391,16 +401,19 @@ public class Scheduler {
             _elevatorSchedules[id].setCanStopCurrentFloor(false);
             sendMessageToElevator(new ElevatorContinueResponse(id, -1).toBytes());
         }
+
+        log(" > Sending new ElevatorScheduleUpdate to floor");
+        sendMessageToFloor(new ElevatorScheduleUpdate(id, _elevatorSchedules[id]).toBytes());
     }
 
     public void handleElevatorButtonPushEvent(ElevatorButtonPushEvent event) {
         int id = event.carID();
         _elevatorSchedules[id].addButtonPress(event.floorNumber());
     }
-    
+
     public void handleElevatorError(ElevatorError error) {
         int id = error.elevatorNumber();
-    
+
         switch(error.faultType()) {
         case DOOR_STUCK_CLOSED:
             log("Door for elevator %d is stuck closed, will resolve and continue", id);
@@ -412,11 +425,11 @@ public class Scheduler {
             break;
         case ELEVATOR_STUCK: {
             log("Motor for elevator %d is stuck. Taking unfinished requests and moving them to the backlog...", id);
-            
+
             for (FloorStop fs: _elevatorSchedules[id].allPickupRequests()) {
                 _floorStops.add(fs);
             }
-            
+
             _elevatorSchedules[id].disable();;
             break;
         }
@@ -424,6 +437,9 @@ public class Scheduler {
             log("Invalid elevator error");
             break;
         }
+
+        log(" > Sending new ElevatorScheduleUpdate to floor");
+        sendMessageToFloor(new ElevatorScheduleUpdate(id, _elevatorSchedules[id]).toBytes());
     }
 
     public static void main(String[] args) throws SocketException, UnknownHostException { new Scheduler().run(); }
