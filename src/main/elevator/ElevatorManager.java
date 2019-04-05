@@ -1,6 +1,10 @@
 package main.elevator;
 
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -9,6 +13,14 @@ import network.socket.ClientSocket;
 import utils.message.Message;
 
 public class ElevatorManager {
+
+    private static PrintStream LOG;
+
+    public static PrintStream getLog() { return LOG; }
+
+    public static void setLogSTDOut() { LOG = new PrintStream(new FileOutputStream(FileDescriptor.out)); }
+
+    public static void setLogFile() throws FileNotFoundException { LOG = new PrintStream(new FileOutputStream("bin/ElevatorManager.log")); }
 
     /* ===================================== */
     /* ========== PRIVATE MEMBERS ========== */
@@ -74,7 +86,7 @@ public class ElevatorManager {
     /** The main running loop for Elevator
      * @throws IOException */
     public void loop() {
-        System.out.println("Elevator System Started...");
+        LOG.println("Elevator System Started...");
 
         if (!_schedulerSocket.runSetupAndStartThreads()) {
             throw new RuntimeException("Something went wrong setting up socket; Aborting");
@@ -122,8 +134,11 @@ public class ElevatorManager {
 
     /** Starts the main loop
      * @param  args
+     * @throws FileNotFoundException
      * @throws IOException */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
+
+        setLogSTDOut();
 
         ElevatorManager elevator;
 

@@ -1,7 +1,8 @@
 package utils.message;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import main.ElevatorSchedule;
 import main.elevator.ElevatorMotor.MotorState;
@@ -59,6 +60,17 @@ public class ElevatorScheduleUpdate {
     /* ================================== */
     /* ========== CONSTRUCTORS ========== */
 
+    public ElevatorScheduleUpdate() {
+        this._elevatorID    = -1;
+        this._currentFloor  = 0;
+        this._currentTarget = -1;
+        this._count         = -1;
+        this._motorState    = MotorState.STATIONARY;
+        this._motorStuck    = false;
+        this._doorStuck     = false;
+        this._elevatorStops = new ArrayList<>();
+    }
+
     public ElevatorScheduleUpdate(int elevatorID, ElevatorSchedule elevatorSchedule) {
         this._elevatorID    = elevatorID;
         this._currentFloor  = elevatorSchedule.currentFloor();
@@ -68,7 +80,7 @@ public class ElevatorScheduleUpdate {
         this._motorStuck    = elevatorSchedule.motorStuck();
         this._doorStuck     = elevatorSchedule.doorStuck();
 
-        this._elevatorStops = new ArrayList<Integer>();
+        this._elevatorStops = new ArrayList<>();
 
         for (int i = 0; i < elevatorSchedule.nextTargets().size(); i++) {
             this._elevatorStops.add(elevatorSchedule.nextTargets().get(i).target());
@@ -81,7 +93,7 @@ public class ElevatorScheduleUpdate {
         ByteBuffer buffer = (ByteBuffer) ByteBuffer.wrap(inputData).position(1);
 
         int numberOfStops = 0;
-        this._elevatorStops = new ArrayList<Integer>();
+        this._elevatorStops = new ArrayList<>();
 
         this._count         = buffer.getInt();
         this._currentTarget = buffer.get();
