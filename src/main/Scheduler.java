@@ -71,7 +71,7 @@ public class Scheduler {
     /* ========== PUBLIC MEMBERS ========== */
 
     public static final int PORT_FLOOR    = 5000;
-    public static final int PORT_ELEVATOR = 5002;
+    public static final int PORT_ELEVATOR = 5001;
 
     /* ============================= */
     /* ========== SETTERS ========== */
