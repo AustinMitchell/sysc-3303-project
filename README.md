@@ -1,6 +1,6 @@
 =========================================
     
-    SYSC3303 Group Project Iteration 4
+    SYSC3303 Group Project Iteration 5
     Section L2 Group 7
     
     Names:
@@ -23,6 +23,10 @@
 		
 		Log files for how long certain processes took to complete get
 		outputted to the /bin directory. The time is in nanoseconds.
+		
+		The GUI is started when the Floor subsystem establishes connection
+		with the Scheduler. It will run as long as the Floor runs, and
+		exiting the window will close down the Floor system.
 
     ===== Test Files:
         All important data classes are unit tested. There is a unit test
@@ -43,11 +47,13 @@
 
     ===== Breakdown of Responsibilities:
         Troy Havelock:
-            - Created new diagram
+            - Handled rate analysis
+            - Set up messaging system between the floor and scheduler for elevator states
+            - Refactored the floor system code
 
         Austin Mitchell:
-			- Added Timer class to measure scheduler
+			- Created the GUI
 
         All Team Members:
             - Worked together continuously at each step of the project
-            - Added elevator handlers
+            - Contributed a review document for all other members, placed under docs/
